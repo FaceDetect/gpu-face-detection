@@ -1,4 +1,11 @@
-function [haarCascade] = get_haar_cascade(fileName)
+function [haarCascade] = get_haar_cascade(fileName, matFilePath, forceReload)
+    
+    if (nargin > 1) && exist(matFilePath, 'file') && (~(nargin > 2) || ~forceReload)
+        load(matFilePath);
+        return
+    end
+
+
     xDoc = xmlread(fileName);
     
     sizeArr = convert_data_items(...
@@ -9,11 +16,11 @@ function [haarCascade] = get_haar_cascade(fileName)
     haarCascade.size.w = sizeArr(1);
     haarCascade.size.h = sizeArr(2);
     
-    xmlStagesItem = xDoc.getElementsByTagName('stages').item(0);
+    xmlStages = xDoc.getElementsByTagName('stages').item(0);
     allStages = [];
-    for i = 0 : (xmlStagesItem.getLength - 1)
-        xmlStageItem = xmlStagesItem.item(i);
-        if itemIsText(xmlStageItem)
+    for i = 0 : (xmlStages.getLength - 1)
+        xmlStageItem = xmlStages.item(i);
+        if item_is_text(xmlStageItem)
             continue;
         end
         
@@ -23,7 +30,7 @@ function [haarCascade] = get_haar_cascade(fileName)
         
         stage.parent = convert_data_items(...
             xmlStageItem.getElementsByTagName('parent'), ...
-            @(x) (str2num(char(x))));
+            @(x) (str2num(char(x)) + 1));
         
         stage.next = convert_data_items(...
             xmlStageItem.getElementsByTagName('next'), ...
@@ -35,7 +42,7 @@ function [haarCascade] = get_haar_cascade(fileName)
         
         for j = 0 : (xmlTrees.getLength - 1)
             xmlTree = xmlTrees.item(j);
-            if itemIsText(xmlTree)
+            if item_is_text(xmlTree)
                 continue;
             end
             
@@ -48,7 +55,7 @@ function [haarCascade] = get_haar_cascade(fileName)
                 @(x) (str2double(char(x))));
             
             tree.rightVal = convert_data_items(...
-                xmlTree.getElementsByTagName('rigth_val'), ...
+                xmlTree.getElementsByTagName('right_val'), ...
                 @(x) (str2double(char(x))));
             
             rectsArr = convert_data_items(...
@@ -86,5 +93,8 @@ function [haarCascade] = get_haar_cascade(fileName)
     
     haarCascade.stages = allStages;
     
+    if exist('matFilePath') == 1
+        save(matFilePath, 'haarCascade');
+    end
 end
 

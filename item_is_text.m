@@ -1,4 +1,4 @@
-function [isText] = itemIsText(xmlItem, callBack)
+function [isText] = item_is_text(xmlItem, callBack)
     isText = false;
     if isa(xmlItem, 'org.apache.xerces.dom.DeferredTextImpl')
         isText = true;  
