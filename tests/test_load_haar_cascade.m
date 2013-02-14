@@ -24,9 +24,9 @@ function test_get_stages(haarCascade)
 assertEqual(length(haarCascade.stages), 4);
 
 function test_get_stage_threshold(haarCascade)
-assertElementsAlmostEqual(haarCascade.stages(1).treshold, 0.8226894140243530);
-assertElementsAlmostEqual(haarCascade.stages(2).treshold, 6.9566087722778320);
-assertElementsAlmostEqual(haarCascade.stages(4).treshold, 18.4129695892333980);
+assertElementsAlmostEqual(haarCascade.stages(1).threshold, 0.8226894140243530);
+assertElementsAlmostEqual(haarCascade.stages(2).threshold, 6.9566087722778320);
+assertElementsAlmostEqual(haarCascade.stages(4).threshold, 18.4129695892333980);
 
 function test_get_stages_parent(haarCascade)
 assertEqual(haarCascade.stages(1).parent, 0);
