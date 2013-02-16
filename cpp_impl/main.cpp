@@ -7,14 +7,15 @@
 
 #include <stdio.h>
 #include "ObjectRecognizer.h"
-
+#include <iostream>
 
 int main(int argv, char **args)
 {
 	ObjectRecognizer obj_rec;
-
-	obj_rec.LoadHaarCascade("../data/haarcascade_frontalface_alt.xml");
-	obj_rec.LoadImage("../data/lena.jpg");
+	std::cout << args[1] << " ";
+	obj_rec.LoadHaarCascade(args[2]);
+	obj_rec.LoadImage(args[1]);
+	obj_rec.Recognize();
 
 
 }
