@@ -19,10 +19,11 @@ public:
 	~ObjectRecognizer();
 	void LoadHaarCascade(const char *path);
 	void LoadImage(const char *path);
+	void UnloadImage();
 	void Recognize();
-	void ComputeIntegralImages();
 private:
 
+	void ComputeIntegralImages();
 	void LoadStages(rapidxml::xml_node<> *stage);
 	void LoadTrees(rapidxml::xml_node<> *tree, std::vector<Tree> &trees);
 	void LoadFeature(rapidxml::xml_node<> *feature, Feature &f);
@@ -47,7 +48,7 @@ private:
 
 	int pic_width;
 	int pic_height;
-	FIBITMAP *colourful_pic;
+	FIBITMAP *grayscaled_pic;
 	BYTE *grayscaled_bytes;
 	int *ii;
 	int *ii2;

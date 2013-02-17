@@ -16,6 +16,6 @@ int main(int argv, char **args)
 	obj_rec.LoadHaarCascade(args[2]);
 	obj_rec.LoadImage(args[1]);
 	obj_rec.Recognize();
-
+	obj_rec.UnloadImage();
 
 }

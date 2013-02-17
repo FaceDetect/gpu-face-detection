@@ -27,6 +27,7 @@ void ReadWholeFile(const char *path, char **out_content) {
 
 	fread(*out_content, sizeof(char), file_size, f);
 	(*out_content)[file_size - 1] = '\0';
+	fclose(f);
 }
 
 

@@ -21,7 +21,7 @@ using namespace std;
 ObjectRecognizer::ObjectRecognizer() :
 		pic_width(-1),
 		pic_height(-1),
-		colourful_pic(NULL),
+		grayscaled_pic(NULL),
 		grayscaled_bytes(NULL),
 		ii(NULL),
 		ii2(NULL) {
@@ -53,6 +53,8 @@ void ObjectRecognizer::LoadHaarCascade(const char *path) {
 
 	xml_node<> *stages = cascade->first_node("stages");
 	LoadStages(stages->first_node());
+
+	delete [] file_content;
 }
 
 void ObjectRecognizer::LoadStages(rapidxml::xml_node<>* stage) {
@@ -155,8 +157,8 @@ void ObjectRecognizer::Recognize() {
 		}
 
 		scale = scale * 1.2;
-		width = (int)floor(haar_cascade.window_width * scale);
-		height = (int)floor(haar_cascade.window_height * scale);
+		width = (int)(haar_cascade.window_width * scale);
+		height = (int)(haar_cascade.window_height * scale);
 	}
 
 
@@ -164,8 +166,10 @@ void ObjectRecognizer::Recognize() {
 }
 
 void ObjectRecognizer::LoadImage(const char* path) {
-	colourful_pic = FreeImage_Load(FreeImage_GetFIFFromFilename(path), path, JPEG_ACCURATE);
-	FIBITMAP *grayscaled_pic = FreeImage_ConvertToGreyscale(colourful_pic);
+	FIBITMAP *colourful_pic = FreeImage_Load(FreeImage_GetFIFFromFilename(path), path, JPEG_ACCURATE);
+	grayscaled_pic = FreeImage_ConvertToGreyscale(colourful_pic);
+	FreeImage_Unload(colourful_pic);
+
 	FreeImage_FlipVertical(grayscaled_pic);
 
 	pic_width = FreeImage_GetPitch(grayscaled_pic);
@@ -187,6 +191,12 @@ void ObjectRecognizer::LoadImage(const char* path) {
 
 	ii = new int[pic_width * pic_height];
 	ii2 = new int[pic_width * pic_height];
+}
+
+void ObjectRecognizer::UnloadImage() {
+	FreeImage_Unload(grayscaled_pic);
+	delete [] ii;
+	delete [] ii2;
 }
 
 void ObjectRecognizer::ComputeIntegralImages() {
@@ -239,14 +249,15 @@ double ObjectRecognizer::TreesPass(Stage &stage, int x, int y, double scale, dou
 double ObjectRecognizer::RectsPass(Tree &tree, int x, int y, double scale) {
 	double rects_sum = 0;
 	for (Rectangle &rect : tree.feature.rects) {
-		rects_sum = rects_sum + RectSum(ii, x + (int)floor(rect.x * scale),
-											y + (int)floor(rect.y * scale),
-											(int)floor(rect.w * scale),
-											(int)floor(rect.h * scale)) * rect.wg;
+		rects_sum = rects_sum + RectSum(ii, x + (int)(rect.x * scale),
+											y + (int)(rect.y * scale),
+											(int)(rect.w * scale),
+											(int)(rect.h * scale)) * rect.wg;
 	}
 
 	return rects_sum;
 }
+
 
 inline int ObjectRecognizer::RectSum(int* ii, int x, int y, int w, int h) {
 
