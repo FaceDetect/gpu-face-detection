@@ -13,6 +13,7 @@ struct Rect {
 	int y;
 	int w;
 	int h;
+	int wg;
 };
 
 

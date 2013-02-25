@@ -9,12 +9,14 @@
 #define UTILS_H_
 
 #include <vector>
+#include <opencv2/core/core.hpp>
 #include "Feature.h"
 
 #define W_HEIGHT 24
 #define W_WIDTH 24
-#define HAAR_MAX_FEATURES
+
 
 void GenerateFeatures(std::vector<Feature>& features);
+cv::Mat_<int> ComputeIntegralImage(cv::Mat_<int> &mat);
 
 #endif /* UTILS_H_ */
