@@ -10,6 +10,7 @@
 using namespace std;
 using namespace cv;
 
+#include "constants.h"
 
 void GenerateFeatures(std::vector<Feature>& features)
 {
@@ -73,13 +74,22 @@ cv::Mat_<int> ComputeIntegralImage(cv::Mat_<int> &mat) {
 		for (int x = 0; x < mat.cols; x++) {
 
 			int p4 = mat(y, x);
-			int p3 = (x < 0) ? 0 : mat(y, x - 1);
-			int p2 = (y < 0) ? 0 : mat(y - 1, x);
-			int p1 = ((x < 0) || (y < 0)) ? 0 : mat(y - 1, x - 1);
+			int p3 = (x == 0) ? 0 : ii(y, x - 1);
+			int p2 = (y == 0) ? 0 : ii(y - 1, x);
+			int p1 = ((x == 0) || (y == 0)) ? 0 : ii(y - 1, x - 1);
 
 			ii(y, x) = p4 - p1 + p3 + p2;
 		}
 	}
 
 	return ii;
+}
+
+void PrintMatrix(const cv::Mat_<int>& mat) {
+	for (int row = 0; row < mat.rows; row++) {
+		for (int col = 0; col < mat.cols; col++) {
+			cout << mat(row, col) << "\t";
+		}
+		cout << endl;
+	}
 }

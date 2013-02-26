@@ -8,7 +8,7 @@
 #ifndef RECTANGLE_H_
 #define RECTANGLE_H_
 
-struct Rect {
+struct Rectangle {
 	int x;
 	int y;
 	int w;

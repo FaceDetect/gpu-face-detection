@@ -10,10 +10,10 @@
 #include <fstream>
 #include <string>
 #include <iostream>
-#include "utils.h"
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
 #include <algorithm>
+
+#include "utils.h"
+#include "constants.h"
 
 using namespace std;
 using namespace cv;
@@ -30,13 +30,23 @@ void TrainingData::LoadImages(const char* pos_image_list_path,
 	while(pos_image_list >> image_path)
 		images_pos.push_back(imread(image_path, CV_LOAD_IMAGE_GRAYSCALE));
 
-	while(neg_image_list >> image_path)
-		images_neg.push_back(imread(image_path, CV_LOAD_IMAGE_GRAYSCALE));
+	while(neg_image_list >> image_path) {
+
+		Mat img = imread(image_path, CV_LOAD_IMAGE_GRAYSCALE);
+		Mat res;
+		resize(img, res, Size(W_WIDTH, W_HEIGHT));
+
+		images_neg.push_back((Mat_<int>)res);
+	}
+
+	cout << "LOADING FINISHED." << endl;
 }
 
 TrainingData::TrainingData() {
 	GenerateFeatures(features);
 }
+
+
 
 void TrainingData::PrepareDataSet() {
 
@@ -61,6 +71,7 @@ void TrainingData::PrepareDataSet() {
 		num_examples++;
 	}
 
+	cout << "PREPARATION FINISHED." << endl;
 
 }
 
@@ -73,4 +84,17 @@ void TrainingData::CreateDataEntry(Mat_<int> &ii, int *entry, int class_label) {
 	}
 
 	entry[i] = class_label;
+}
+
+void TrainingData::ShowImages() {
+	vector<Mat_<int> > vec;
+	vec.insert(vec.end(), images_pos.begin(), images_pos.end());
+	vec.insert(vec.end(), images_neg.begin(), images_neg.end());
+	cout << vec.size() << endl;
+	for (Mat_<int> m : vec) {
+		namedWindow("Display window", CV_WINDOW_AUTOSIZE);
+		imshow("Display window", (Mat_<uchar>)m);
+		waitKey(0);
+	}
+
 }

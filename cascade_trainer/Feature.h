@@ -11,7 +11,7 @@
 
 #include "Rect.h"
 
-#include <opencv2/core/core.hpp>
+#include <opencv2/opencv.hpp>
 
 #define HAAR_MAX_FEATURES 3
 
@@ -25,7 +25,7 @@ public:
 	int Eval(const cv::Mat_<int> &ii) const;
 //	void write( FileStorage &fs ) const;
 
-	Rect rects[HAAR_MAX_FEATURES];
+	Rectangle rects[HAAR_MAX_FEATURES];
 
 	struct {
 		int p0, p1, p2, p3;
