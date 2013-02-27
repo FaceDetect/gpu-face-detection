@@ -5,8 +5,8 @@
  *      Author: olehp
  */
 
-#ifndef DECISIONTREE_H_
-#define DECISIONTREE_H_
+#ifndef DECISIONSTUMP_H_
+#define DECISIONSTUMP_H_
 
 #include <opencv2/opencv.hpp>
 
@@ -15,7 +15,7 @@ public:
 	DecisionStump();
 	DecisionStump(double threshold, int i, bool gt);
 
-	static DecisionStump Build(cv::Mat_<int> &dataset, cv::Mat_<double> D);
+	static struct DecisionStumpInfo Build(cv::Mat_<int> &dataset, cv::Mat_<double> D);
 
 	cv::Mat_<int> Classify(cv::Mat_<int> &dataset);
 
@@ -25,11 +25,27 @@ public:
 	int i_feature;
 	bool gt;
 
-private:
-	static double WgError(const cv::Mat_<int> &predicted_vals,
-						  const cv::Mat_<int> &class_labels,
-						  const cv::Mat_<double> &D);
+	static double WgError(const cv::Mat_<double>& err_arr,
+			              const cv::Mat_<double> &D);
+
+	static cv::Mat_<double> ErrorArr(const cv::Mat_<int>& predicted_vals,
+									 const cv::Mat_<int>& class_labels);
 
 };
 
-#endif /* DECISIONTREE_H_ */
+struct DecisionStumpInfo {
+
+	DecisionStumpInfo(const DecisionStump &stump,
+					  const cv::Mat_<double> &err_arr,
+					  double wg_err) {
+		this->ds = stump;
+		this->err_arr = err_arr;
+		this->wg_err = wg_err;
+	}
+
+	DecisionStump ds;
+	cv::Mat_<double> err_arr;
+	double wg_err;
+};
+
+#endif /* DECISIONSTUMP_H_ */

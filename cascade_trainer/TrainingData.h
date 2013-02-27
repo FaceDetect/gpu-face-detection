@@ -26,6 +26,11 @@ public:
 	std::vector<cv::Mat_<int> > ii_neg;
 	cv::Mat_<int> data_set;
 	std::vector<Feature> features;
+
+	int num_pos;
+	int num_neg;
+	int num_total;
+	int num_features;
 };
 
 #endif /* TRAININGDATA_H_ */

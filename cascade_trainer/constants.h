@@ -13,5 +13,8 @@
 #define W_WIDTH 24
 #define NUM_STEPS 10
 
+#define POSITIVE_LABEL 1
+#define NEGATIVE_LABEL 0
+
 
 #endif /* CONSTANTS_H_ */

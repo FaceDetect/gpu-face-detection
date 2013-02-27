@@ -42,7 +42,11 @@ void TrainingData::LoadImages(const char* pos_image_list_path,
 	cout << "LOADING FINISHED." << endl;
 }
 
-TrainingData::TrainingData() {
+TrainingData::TrainingData() :
+		num_pos(-1),
+		num_neg(-1),
+		num_total(-1),
+		num_features(-1) {
 	GenerateFeatures(features);
 }
 
@@ -50,24 +54,34 @@ TrainingData::TrainingData() {
 
 void TrainingData::PrepareDataSet() {
 
-	ii_pos.resize(images_pos.size(), Mat_<int>(W_HEIGHT, W_WIDTH));
-	ii_neg.resize(images_neg.size(), Mat_<int>(W_HEIGHT, W_WIDTH));
+	num_pos = images_pos.size();
+	num_neg = images_neg.size();
+	num_total = num_pos + num_neg;
+	num_features = features.size();
+
+	ii_pos.resize(num_pos, Mat_<int>(W_HEIGHT, W_WIDTH));
+	ii_neg.resize(num_neg, Mat_<int>(W_HEIGHT, W_WIDTH));
 
 	transform(images_pos.begin(), images_pos.end(), ii_pos.begin(), ComputeIntegralImage);
 	transform(images_neg.begin(), images_neg.end(), ii_neg.begin(), ComputeIntegralImage);
 
-	data_set.create(images_pos.size() + images_neg.size(), features.size() + 1);
+//	ENDL
+//	PrintMatrix(images_pos.at(5));
+//	ENDL
+//	PrintMatrix(ii_pos.at(5));
+
+	data_set.create(num_total, num_features + 1);
 
 
 	int num_examples = 0;
 
 	for (Mat_<int> &ii : ii_pos) {
-		CreateDataEntry(ii, data_set.ptr<int>(num_examples), 1);
+		CreateDataEntry(ii, data_set.ptr<int>(num_examples), POSITIVE_LABEL);
 		num_examples++;
 	}
 
 	for (Mat_<int> &ii : ii_neg) {
-		CreateDataEntry(ii, data_set.ptr<int>(num_examples), -1);
+		CreateDataEntry(ii, data_set.ptr<int>(num_examples), NEGATIVE_LABEL);
 		num_examples++;
 	}
 
