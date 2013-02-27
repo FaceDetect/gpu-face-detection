@@ -6,11 +6,11 @@
  */
 
 #include "utils.h"
+#include "constants.h"
 
 using namespace std;
 using namespace cv;
 
-#include "constants.h"
 
 void GenerateFeatures(std::vector<Feature>& features)
 {
@@ -93,3 +93,4 @@ void PrintMatrix(const cv::Mat_<int>& mat) {
 		cout << endl;
 	}
 }
+

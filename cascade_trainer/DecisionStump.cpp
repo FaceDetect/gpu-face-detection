@@ -8,6 +8,8 @@
 #include "DecisionStump.h"
 
 using namespace cv;
+using namespace std;
+
 
 #include "constants.h"
 
@@ -31,10 +33,10 @@ DecisionStump DecisionStump::Build(Mat_<int> &dataset, Mat_<double> D) {
 
 	DecisionStump best_stump;
 	double least_wg_err = DBL_MAX;
-	Mat_<int> class_labels = dataset.colRange(dataset.cols, dataset.cols + 1);
+	Mat_<int> class_labels = GET_MAT_COL(dataset, dataset.cols - 1);
 
 	for (int col = 0; col < dataset.cols - 1; col++) {
-		Mat_<int> feature_vals = dataset.colRange(col, col + 1);
+		Mat_<int> feature_vals = GET_MAT_COL(dataset, col);
 
 		double max_val;
 		double min_val;
@@ -62,7 +64,7 @@ DecisionStump DecisionStump::Build(Mat_<int> &dataset, Mat_<double> D) {
 			}
 
 			if (wg_err_gt < least_wg_err) {
-				best_stump = curr_stump_lt;
+				best_stump = curr_stump_gt;
 				least_wg_err = wg_err_gt;
 			}
 		}
@@ -71,18 +73,37 @@ DecisionStump DecisionStump::Build(Mat_<int> &dataset, Mat_<double> D) {
 	return best_stump;
 }
 
+void DecisionStump::PrintInfo() {
+	cout << "******THRESOLD INFO******" << endl;
+	cout << "Threshold: " << threshold << endl;
+	cout << "Feature id: " << i_feature<< endl;
+	cout << "gt: " << gt << endl;
+	cout << "*************************" << endl;
+}
+
 double DecisionStump::WgError(const cv::Mat_<int>& predicted_vals,
 		                      const cv::Mat_<int>& class_labels,
 		                      const cv::Mat_<double> &D) {
 
+
+//	ENDL
+//	PrintMatrix(predicted_vals);
+//	ENDL
+//	PrintMatrix(class_labels);
+//	ENDL
+//	PrintMatrix(D);
 
 	Mat_<double> err_arr(class_labels.rows, 1);
 
 	for (int row = 0; row < class_labels.rows; row++)
 		err_arr(row, 0) = (class_labels(row, 0) == predicted_vals(row, 0)) ? 0 : 1;
 
-	double wg_err = sum(err_arr.mul(D)).val[0];
+//	ENDL
+//	PrintMatrix(err_arr);
 
+
+	double wg_err = sum(err_arr.mul(D)).val[0];
+//	cout << "WG_ERR: " << wg_err << endl;
 	return wg_err;
 }
 
@@ -91,10 +112,15 @@ cv::Mat_<int> DecisionStump::Classify(cv::Mat_<int>& dataset) {
 	Mat_<int> result(dataset.rows, 1);
 	Mat_<int> vals = GET_MAT_COL(dataset, i_feature);
 
-	std::transform(vals.begin(), vals.end(), result.begin(),
+	relaxed_transform(vals.begin(), vals.end(), result.begin(),
 			[this](const int &val) -> int {
 					if (gt) return (val > this->threshold) ? 0 : 1;
 					else return (val <= this->threshold) ? 0 : 1; });
+
+//	ENDL
+//	cout << "THRESHOLD: " << this->threshold << endl;
+//	cout << "GT: " << this->gt << endl;
+//	PrintMatrix(result);
 
 	return result;
 }

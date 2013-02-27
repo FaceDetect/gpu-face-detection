@@ -11,6 +11,7 @@
 #include "utils.h"
 #include "Feature.h"
 #include <algorithm>
+#include "DecisionStump.h"
 
 using namespace cv;
 using namespace std;
@@ -47,32 +48,29 @@ int main( int argc, char **argv ){
 	//td.PrepareDataSet();
 
 	Mat_<int> mat(5, 5);
-
-	for (int row = 0; row < mat.rows; row++)
-		for (int col = 0; col < mat.cols; col++)
+	Mat_<double> D(5, 1);
+	for (int row = 0; row < mat.rows; row++) {
+		for (int col = 0; col < mat.cols - 1; col++)
 			mat(row, col) = ((row + col) * 10) % (row + 7);
+
+		mat(row, 4) = row % 2;
+
+		D(row, 0) = 1.0 / 5;
+	}
+
+
 
 	PrintMatrix(mat);
 
-	ENDL;
+//	ENDL
+//
+//	PrintMatrix(mat.colRange(4, 5));
 
-	for_each(mat.begin(), mat.end(), [](int i) { cout << i << " "; });
+	DecisionStump ds = DecisionStump::Build(mat, D);
 
-
-
-
-
-//	cout << minMaxIdx(mat, 0, &max_el) << endl;
-
-//	int sz[] = {3, 3, 3};
-//	Mat accumarray(3, sz, CV_8U, Scalar::all(0));
-//	accumarray.at<uchar>(0, 1, 2) = 20;
-//	double testMaxval;
-//	int maxIdx[3];
-//	minMaxIdx(accumarray, 0, &testMaxval, 0, maxIdx);
-//	cout << testMaxval << endl ;
-//	cout << maxIdx[0] << ", " << maxIdx[1] << ", " << maxIdx[2] << endl;
-
+	ds.PrintInfo();
+	ENDL
+	PrintMatrix(ds.Classify(mat));
 
 //	vector<Feature> feats;
 //

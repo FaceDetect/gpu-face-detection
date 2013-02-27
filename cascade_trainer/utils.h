@@ -22,4 +22,13 @@ cv::Mat_<int> ComputeIntegralImage(cv::Mat_<int> &mat);
 void PrintMatrix(const cv::Mat_<int> &mat);
 
 
+template <class InputIterator, class OutputIterator, class Transformator>
+OutputIterator relaxed_transform(InputIterator first, InputIterator last,
+                                 OutputIterator result, Transformator trans) {
+	for (; first != last; ++first, ++result)
+		*result = trans(*first);
+
+	return result;
+}
+
 #endif /* UTILS_H_ */

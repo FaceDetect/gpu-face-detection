@@ -8,8 +8,6 @@
 #include "Feature.h"
 #include "Rect.h"
 
-#include <stdlib.h>
-
 Feature::Feature() {
 }
 

@@ -14,13 +14,18 @@ class DecisionStump {
 public:
 	DecisionStump();
 	DecisionStump(double threshold, int i, bool gt);
+
+	static DecisionStump Build(cv::Mat_<int> &dataset, cv::Mat_<double> D);
+
 	cv::Mat_<int> Classify(cv::Mat_<int> &dataset);
+
+	void PrintInfo();
+
 	double threshold;
 	int i_feature;
 	bool gt;
 
 private:
-	static DecisionStump Build(cv::Mat_<int> &dataset, cv::Mat_<double> D);
 	static double WgError(const cv::Mat_<int> &predicted_vals,
 						  const cv::Mat_<int> &class_labels,
 						  const cv::Mat_<double> &D);
