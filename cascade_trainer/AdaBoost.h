@@ -22,6 +22,7 @@ public:
 	cv::Mat_<int> Classify(TrainingData &td);
 	double thresold;
 private:
+	void NormalizeWeights(cv::Mat_<double> &D);
 	void UpdateWeights(cv::Mat_<double> &D, cv::Mat_<double> &err_arr, double beta);
 	double CalcAlpha(double beta);
 	TrainingData &data;

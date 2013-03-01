@@ -8,6 +8,11 @@
 #include "Feature.h"
 #include "Rect.h"
 
+#include <iostream>
+
+using namespace std;
+
+
 Feature::Feature() {
 }
 
@@ -26,7 +31,7 @@ Feature::Feature(int offset,
 	rects[1].y = y1;
 	rects[1].w = w1;
 	rects[1].h = h1;
-	rects[2].wg = wg1;
+	rects[1].wg = wg1;
 
 	rects[2].x = x2;
 	rects[2].y = y2;
@@ -35,8 +40,11 @@ Feature::Feature(int offset,
 	rects[2].wg = wg2;
 
 	for (int i = 0; i < HAAR_MAX_FEATURES; i++) {
-		rects_coords[i].p0 = rects[i].x + rects[i].y;
-		rects_coords[i].p1 = rects[i].x + (rects[i].y * offset);
+
+		if (rects[i].wg == 0) continue;
+
+		rects_coords[i].p0 = rects[i].x + rects[i].y * offset;
+		rects_coords[i].p1 = rects[i].x + rects[i].w + rects[i].y * offset;
 		rects_coords[i].p2 = rects[i].x + (rects[i].y + rects[i].h) * offset;
 		rects_coords[i].p3 = (rects[i].x + rects[i].w) + (rects[i].y + rects[i].h) * offset;
 	}
@@ -48,8 +56,24 @@ int Feature::Eval(const cv::Mat_<int> &ii) const {
 
 	for (int i = 0; i < HAAR_MAX_FEATURES; i++) {
 		if (rects[i].wg == 0) continue;
-		sum += data[rects_coords[i].p0] + data[rects_coords[i].p3] - data[rects_coords[i].p2] - data[rects_coords[i].p1];
+		sum += (data[rects_coords[i].p0] + data[rects_coords[i].p3] - data[rects_coords[i].p2] - data[rects_coords[i].p1]) * rects[i].wg;
 	}
 
 	return sum;
+}
+
+void Feature::PrintInfo() {
+
+	cout << "********FEATURE INFO********" << endl;
+	for (int i = 0; i < HAAR_MAX_FEATURES; i++) {
+		if (rects[i].wg == 0) continue;
+		cout << "x" << i << ": " << rects[i].x << endl;
+		cout << "y" << i << ": " << rects[i].y << endl;
+		cout << "w" << i << ": " << rects[i].w << endl;
+		cout << "h" << i << ": " << rects[i].h << endl;
+		cout << "wg" << i << ": " << rects[i].wg << endl;
+	}
+
+	cout << "****************************" << endl;
+
 }

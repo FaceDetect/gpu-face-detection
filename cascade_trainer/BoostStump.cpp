@@ -14,12 +14,11 @@ BoostStump::BoostStump(const DecisionStump& ds) {
 	threshold = ds.threshold;
 	i_feature = ds.i_feature;
 	gt = ds.gt;
-	alpha = 1;
-
+	alpha = 0;
 }
 
 cv::Mat_<double> BoostStump::Classify(cv::Mat_<int>& dataset) {
 
-	return (Mat_<double>)DecisionStump::Classify(dataset) * alpha;
+	return (alpha == 0) ? Mat_<double>::zeros(dataset.rows, 1) :(Mat_<double>)DecisionStump::Classify(dataset) * alpha;
 
 }

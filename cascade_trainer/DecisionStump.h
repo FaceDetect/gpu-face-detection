@@ -37,14 +37,17 @@ struct DecisionStumpInfo {
 
 	DecisionStumpInfo(const DecisionStump &stump,
 					  const cv::Mat_<double> &err_arr,
+					  const cv::Mat_<double> &best_pred,
 					  double wg_err) {
 		this->ds = stump;
 		this->err_arr = err_arr;
+		this->best_pred = best_pred;
 		this->wg_err = wg_err;
 	}
 
 	DecisionStump ds;
 	cv::Mat_<double> err_arr;
+	cv::Mat_<double> best_pred;
 	double wg_err;
 };
 

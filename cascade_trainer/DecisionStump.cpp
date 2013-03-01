@@ -34,28 +34,22 @@ DecisionStumpInfo DecisionStump::Build(Mat_<int> &dataset, Mat_<double> D) {
 	DecisionStump best_stump;
 	double least_wg_err = DBL_MAX;
 	cv::Mat_<double> best_err_arr;
+	cv::Mat_<int> best_pred;
 
 	Mat_<int> class_labels = GET_MAT_COL(dataset, dataset.cols - 1);
 
 	for (int col = 0; col < dataset.cols - 1; col++) {
 
-//		cout << "Trying feature: " << col << endl;
+		if (col % 20000 == 0) cout << "Passed features: " << col << "/" << (dataset.cols - 1) << endl;
 
 		Mat_<int> feature_vals = GET_MAT_COL(dataset, col);
 
-		double max_val;
-		double min_val;
-
-		minMaxIdx(feature_vals, &min_val, &max_val);
-
-		double step_size = (max_val - min_val) / NUM_STEPS;
-
-		for (int step = 0; step < NUM_STEPS; step++) {
+		for (int &thr : feature_vals) {
 			for (int ineq = 0; ineq <= 1; ineq++) {
 
-				DecisionStump curr_stump(min_val + step * step_size, col, ineq);
-
-				Mat_<double> err_arr = ErrorArr(curr_stump.Classify(dataset), class_labels);
+				DecisionStump curr_stump(thr, col, ineq);
+				Mat_<int> pred = curr_stump.Classify(dataset);
+				Mat_<double> err_arr = ErrorArr(pred, class_labels);
 
 				double wg_err = WgError(err_arr, D);
 
@@ -63,12 +57,12 @@ DecisionStumpInfo DecisionStump::Build(Mat_<int> &dataset, Mat_<double> D) {
 					best_stump = curr_stump;
 					least_wg_err = wg_err;
 					best_err_arr = err_arr;
+					best_pred = pred;
 				}
 			}
 		}
-
 	}
-	return DecisionStumpInfo(best_stump, best_err_arr, least_wg_err);
+	return DecisionStumpInfo(best_stump, best_err_arr, best_pred, least_wg_err);
 }
 
 void DecisionStump::PrintInfo() {

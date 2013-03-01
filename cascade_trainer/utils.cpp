@@ -11,41 +11,55 @@
 using namespace std;
 using namespace cv;
 
+int mygetch()
+{
+    struct termios oldt,
+    newt;
+    int ch;
+    tcgetattr( STDIN_FILENO, &oldt );
+    newt = oldt;
+    newt.c_lflag &= ~( ICANON | ECHO );
+    tcsetattr( STDIN_FILENO, TCSANOW, &newt );
+    ch = getchar();
+    tcsetattr( STDIN_FILENO, TCSANOW, &oldt );
+    return ch;
+}
+
 
 void GenerateFeatures(std::vector<Feature>& features)
 {
-    int offset = W_WIDTH + 1;
+    int offset = W_WIDTH;
     for( int x = 0; x < W_WIDTH; x++ )
     {
         for( int y = 0; y < W_HEIGHT; y++ )
         {
-            for( int dx = 1; dx <= W_WIDTH; dx++ )
+            for( int dx = 1; dx < W_WIDTH; dx++ )
             {
-                for( int dy = 1; dy <= W_HEIGHT; dy++ )
+                for( int dy = 1; dy < W_HEIGHT; dy++ )
                 {
                     // haar_x2
-                    if ( (x+dx*2 <= W_WIDTH) && (y+dy <= W_HEIGHT) )
+                    if ( (x+dx*2 < W_WIDTH) && (y+dy < W_HEIGHT) )
                     {
                         features.push_back( Feature( offset,
                             x,    y, dx*2, dy, -1,
                             x+dx, y, dx  , dy, +2 ) );
                     }
                     // haar_y2
-                    if ( (x+dx <= W_WIDTH) && (y+dy*2 <= W_HEIGHT) )
+                    if ( (x+dx < W_WIDTH) && (y+dy*2 < W_HEIGHT) )
                     {
                         features.push_back( Feature( offset,
                             x,    y, dx, dy*2, -1,
                             x, y+dy, dx, dy,   +2 ) );
                     }
                     // haar_x3
-                    if ( (x+dx*3 <= W_WIDTH) && (y+dy <= W_HEIGHT) )
+                    if ( (x+dx*3 < W_WIDTH) && (y+dy < W_HEIGHT) )
                     {
                         features.push_back( Feature( offset,
                             x,    y, dx*3, dy, -1,
                             x+dx, y, dx  , dy, +3 ) );
                     }
                     // haar_y3
-                    if ( (x+dx <= W_WIDTH) && (y+dy*3 <= W_HEIGHT) )
+                    if ( (x+dx < W_WIDTH) && (y+dy*3 < W_HEIGHT) )
                     {
                         features.push_back( Feature( offset,
                             x, y,    dx, dy*3, -1,
@@ -53,7 +67,7 @@ void GenerateFeatures(std::vector<Feature>& features)
                     }
 
                     // x2_y2
-                    if ( (x+dx*2 <= W_WIDTH) && (y+dy*2 <= W_HEIGHT) )
+                    if ( (x+dx*2 < W_WIDTH) && (y+dy*2 < W_HEIGHT) )
                     {
                         features.push_back( Feature( offset,
                             x,    y,    dx*2, dy*2, -1,
@@ -84,13 +98,3 @@ cv::Mat_<int> ComputeIntegralImage(cv::Mat_<int> &mat) {
 
 	return ii;
 }
-
-void PrintMatrix(const cv::Mat_<int>& mat) {
-	for (int row = 0; row < mat.rows; row++) {
-		for (int col = 0; col < mat.cols; col++) {
-			cout << mat(row, col) << "\t";
-		}
-		cout << endl;
-	}
-}
-

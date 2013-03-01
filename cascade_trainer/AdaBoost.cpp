@@ -28,10 +28,14 @@ void AdaBoost::Train(int num_stumps) {
 
 	for (int t = 0; t < num_stumps; ++t) {
 
+		NormalizeWeights(D);
+
 		cout << "T = " << t << endl;
-//		waitKey(0);
 
 		DecisionStumpInfo info = DecisionStump::Build(data.data_set, D);
+
+		info.ds.PrintInfo();
+
 
 		double beta = info.wg_err / (1 - info.wg_err);
 
@@ -39,9 +43,16 @@ void AdaBoost::Train(int num_stumps) {
 
 		BoostStump bs(info.ds);
 
-		thresold += (bs.alpha = CalcAlpha(beta));
+		thresold += 0.5 * (bs.alpha = CalcAlpha(beta));
 
 		stumps.push_back(bs);
+
+		double err_rate = sum(DecisionStump::ErrorArr(Classify(data), class_labels)).val[0];
+
+		cout << "TOTAL ERR RATE: " << err_rate / class_labels.rows << endl;
+
+		if (err_rate == 0)
+			break;
 	}
 }
 
@@ -65,6 +76,16 @@ void AdaBoost::UpdateWeights(cv::Mat_<double>& D, cv::Mat_<double>& err_arr,
 
 	for (int i = 0; i < D.rows; ++i)
 		D(i, 0) *= pow(beta, 1 - err_arr(i, 0));
+}
+
+void AdaBoost::NormalizeWeights(cv::Mat_<double>& D) {
+	double total = sum(D).val[0];
+
+	if (total == 0) return;
+
+	for (int i = 0; i < D.rows; ++i) {
+		D(i, 0) /= total;
+	}
 }
 
 double AdaBoost::CalcAlpha(double beta) {

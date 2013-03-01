@@ -39,6 +39,9 @@ void TrainingData::LoadImages(const char* pos_image_list_path,
 		images_neg.push_back((Mat_<int>)res);
 	}
 
+	pos_image_list.close();
+	neg_image_list.close();
+
 	cout << "LOADING FINISHED." << endl;
 }
 
@@ -65,11 +68,6 @@ void TrainingData::PrepareDataSet() {
 	transform(images_pos.begin(), images_pos.end(), ii_pos.begin(), ComputeIntegralImage);
 	transform(images_neg.begin(), images_neg.end(), ii_neg.begin(), ComputeIntegralImage);
 
-//	ENDL
-//	PrintMatrix(images_pos.at(5));
-//	ENDL
-//	PrintMatrix(ii_pos.at(5));
-
 	data_set.create(num_total, num_features + 1);
 
 
@@ -84,6 +82,11 @@ void TrainingData::PrepareDataSet() {
 		CreateDataEntry(ii, data_set.ptr<int>(num_examples), NEGATIVE_LABEL);
 		num_examples++;
 	}
+
+	ii_pos.resize(0);
+	ii_neg.resize(0);
+	images_pos.resize(0);
+	images_neg.resize(0);
 
 	cout << "PREPARATION FINISHED." << endl;
 

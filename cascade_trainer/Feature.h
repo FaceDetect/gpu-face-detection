@@ -23,6 +23,7 @@ public:
 			int x1, int y1, int w1, int h1, int wg1,
 			int x2 = 0, int y2 = 0, int w2 = 0, int h2 = 0, int wg2 = 0);
 	int Eval(const cv::Mat_<int> &ii) const;
+	void PrintInfo();
 //	void write( FileStorage &fs ) const;
 
 	Rectangle rects[HAAR_MAX_FEATURES];
