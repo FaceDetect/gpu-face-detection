@@ -10,19 +10,38 @@
 
 #include <vector>
 #include <opencv2/opencv.hpp>
-#include "Feature.h"
 #include <termios.h>
 #include <unistd.h>
+#include <stdio.h>
+
+#include "Feature.h"
+
 
 #define GET_MAT_COL(mat, i_col) \
 	(mat).colRange((i_col), (i_col) + 1)
 
 #define ENDL std::cout << std::endl;
+#define SINGLE_SUM 0
+#define SQUARED_SUM 1
+#define SQR(a) (( a ) * ( a ))
 
 int mygetch();
-
 void GenerateFeatures(std::vector<Feature>& features);
-cv::Mat_<int> ComputeIntegralImage(cv::Mat_<int> &mat);
+cv::Mat_<int> ComputeIntegralImage(const cv::Mat_<int> &mat, int mode);
+
+template <class T>
+bool MatrEq(const cv::Mat_<T> &mat1, const cv::Mat_<T> &mat2) {
+	if ((mat1.rows != mat2.rows) || (mat1.cols != mat2.cols)) return false;
+
+	cv::MatConstIterator_<T> it1 = mat1.begin();
+	cv::MatConstIterator_<T> it2 = mat2.begin();
+
+	for (; it1 != mat1.end(); it1++, it2++)
+		if (*it1 != *it2) return false;
+
+	return true;
+}
+
 
 template <class T>
 void PrintMatrix(const cv::Mat_<T> &mat) {

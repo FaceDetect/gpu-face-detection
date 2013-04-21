@@ -65,6 +65,10 @@ void TrainingData::PrepareDataSet() {
 	ii_pos.resize(num_pos, Mat_<int>(W_HEIGHT, W_WIDTH));
 	ii_neg.resize(num_neg, Mat_<int>(W_HEIGHT, W_WIDTH));
 
+	for (Mat_<int> pos_img : images_pos) {
+		pos_img = ComputeIntegralImage()
+	}
+
 	transform(images_pos.begin(), images_pos.end(), ii_pos.begin(), ComputeIntegralImage);
 	transform(images_neg.begin(), images_neg.end(), ii_neg.begin(), ComputeIntegralImage);
 

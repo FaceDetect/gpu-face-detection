@@ -80,7 +80,7 @@ void GenerateFeatures(std::vector<Feature>& features)
     }
 }
 
-cv::Mat_<int> ComputeIntegralImage(cv::Mat_<int> &mat) {
+cv::Mat_<int> ComputeIntegralImage(const cv::Mat_<int> &mat, int mode) {
 
 	Mat_<int> ii(mat.rows, mat.cols);
 
@@ -92,7 +92,7 @@ cv::Mat_<int> ComputeIntegralImage(cv::Mat_<int> &mat) {
 			int p2 = (y == 0) ? 0 : ii(y - 1, x);
 			int p1 = ((x == 0) || (y == 0)) ? 0 : ii(y - 1, x - 1);
 
-			ii(y, x) = p4 - p1 + p3 + p2;
+			ii(y, x) = ((mode == SQUARED_SUM) ? SQR(p4) : p4) - p1 + p3 + p2;
 		}
 	}
 
