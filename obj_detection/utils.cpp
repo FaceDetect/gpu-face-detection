@@ -8,6 +8,9 @@
 #include "utils.h"
 #include "constants.h"
 
+#include <fstream>
+#include <stdexcept>
+
 using namespace std;
 using namespace cv;
 
@@ -80,21 +83,38 @@ void GenerateFeatures(std::vector<Feature>& features)
     }
 }
 
-cv::Mat_<int> ComputeIntegralImage(const cv::Mat_<int> &mat, int mode) {
+void LoadImages(const char* pos_list, const char* neg_list,
+		std::vector<LabeledImg> &container) {
 
-	Mat_<int> ii(mat.rows, mat.cols);
+	ifstream pos_imgs(pos_list);
+	if (!pos_imgs.is_open()) throw std::runtime_error("Positive images list not found.");
 
-	for (int y = 0; y < mat.rows; y++) {
-		for (int x = 0; x < mat.cols; x++) {
+	ifstream neg_imgs(neg_list);
+	if (!neg_imgs.is_open()) throw std::runtime_error("Negative images list not found.");
 
-			int p4 = mat(y, x);
-			int p3 = (x == 0) ? 0 : ii(y, x - 1);
-			int p2 = (y == 0) ? 0 : ii(y - 1, x);
-			int p1 = ((x == 0) || (y == 0)) ? 0 : ii(y - 1, x - 1);
+	string img_path;
 
-			ii(y, x) = ((mode == SQUARED_SUM) ? SQR(p4) : p4) - p1 + p3 + p2;
-		}
+	while(pos_imgs >> img_path)
+		container.push_back(make_pair((Mat_<float>)imread(img_path, CV_LOAD_IMAGE_GRAYSCALE), POSITIVE_LABEL));
+
+	while(neg_imgs >> img_path) {
+
+		Mat img = imread(img_path, CV_LOAD_IMAGE_GRAYSCALE);
+		Mat res;
+		resize(img, res, Size(W_WIDTH, W_HEIGHT));
+
+		container.push_back(make_pair((Mat_<float>)res, NEGATIVE_LABEL));
 	}
 
-	return ii;
+	pos_imgs.close();
+	neg_imgs.close();
+
+}
+
+std::vector<Feature> &GetFeatureSet() {
+	static vector<Feature> set;
+
+	if (set.empty()) GenerateFeatures(set);
+
+	return set;
 }

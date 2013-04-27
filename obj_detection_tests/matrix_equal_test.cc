@@ -15,7 +15,7 @@ class MatrixEqualTest : public MatTest {
 };
 
 TEST_F(MatrixEqualTest, equal) {
-	Mat_<int> that_mat = mat3x3.clone();
+	Mat_<float> that_mat = mat3x3.clone();
 
 	ASSERT_TRUE(MatrEq(mat3x3, that_mat));
 }

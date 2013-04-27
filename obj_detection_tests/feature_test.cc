@@ -14,6 +14,7 @@
 #include "utils.h"
 
 using namespace cv;
+using namespace std;
 
 
 class FeatureTest: public ::testing::Test {
@@ -51,13 +52,14 @@ TEST_F(FeatureTest, RectsCoords) {
 TEST_F(FeatureTest, FeatureEval) {
 //	PrintMatrix(mat);
 
-	Mat_<int> mat = CreateMatrix<int>(24, 24);;
-	Mat_<int> ii = ComputeIntegralImage(mat, SINGLE_SUM);
+	Mat_<float> mat = CreateMatrix<float>(24, 24);
+	Mat_<float> ii = mat.clone();
+	ToIntegralImage(ii, SINGLE_SUM);
 
-	int f2res = f2rects.Eval(ii);
-	int f3res = f3rects.Eval(ii);
-	int f2res_expect = 0;
-	int f3res_expect = 0;
+	float f2res = f2rects.Eval(ii);
+	float f3res = f3rects.Eval(ii);
+	float f2res_expect = 0;
+	float f3res_expect = 0;
 
 
 	for (int i = 0; i < HAAR_MAX_FEATURES; i++) {
@@ -86,4 +88,10 @@ TEST_F(FeatureTest, FeatureEval) {
 	EXPECT_EQ(f2res_expect, f2res);
 	EXPECT_EQ(f3res_expect, f3res);
 
+}
+
+TEST(GetFeatureSetTest, IsNotEmpty) {
+	vector<Feature> set = GetFeatureSet();
+
+	ASSERT_FALSE(set.empty());
 }

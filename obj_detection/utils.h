@@ -13,9 +13,12 @@
 #include <termios.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "Feature.h"
 
+typedef int label_t;
+typedef std::pair<cv::Mat_<float>, label_t> LabeledImg;
 
 #define GET_MAT_COL(mat, i_col) \
 	(mat).colRange((i_col), (i_col) + 1)
@@ -23,11 +26,59 @@
 #define ENDL std::cout << std::endl;
 #define SINGLE_SUM 0
 #define SQUARED_SUM 1
-#define SQR(a) (( a ) * ( a ))
 
 int mygetch();
 void GenerateFeatures(std::vector<Feature>& features);
-cv::Mat_<int> ComputeIntegralImage(const cv::Mat_<int> &mat, int mode);
+void LoadImages(const char * pos_list, const char * neg_list, std::vector<LabeledImg> &container);
+std::vector<Feature> & GetFeatureSet();
+
+
+template<typename T>
+inline T sqr(const T &arg) {
+	return arg * arg;
+}
+
+template <typename T>
+void ToIntegralImage(cv::Mat_<T> &mat, int mode) {
+	for (int y = 0; y < mat.rows; y++) {
+		for (int x = 0; x < mat.cols; x++) {
+
+			T p4 = mat(y, x);
+			T p3 = (x == 0) ? 0 : mat(y, x - 1);
+			T p2 = (y == 0) ? 0 : mat(y - 1, x);
+			T p1 = ((x == 0) || (y == 0)) ? 0 : mat(y - 1, x - 1);
+
+			mat(y, x) = ((mode == SQUARED_SUM) ? sqr(p4) : p4) - p1 + p3 + p2;
+		}
+	}
+}
+
+template<class T>
+inline T Mean(const cv::Mat_<T> &mat) {
+	return sum(mat).val[0] / (mat.rows * mat.cols);
+}
+
+template<class T>
+float StdDev(const cv::Mat_<T> &mat) {
+	T sqr_sum = 0;
+
+	for(const T &i : mat)
+		sqr_sum += sqr(i);
+
+	float variance = sqr_sum / (mat.rows * mat.cols) - sqr(Mean(mat));
+
+	return (variance < 0) ? sqrt(-variance) : sqrt(variance);
+}
+
+template<typename T>
+void NormalizeMat(cv::Mat_<T> &mat) {
+
+	float std_dev = StdDev(mat);
+
+
+	if (std_dev != 0)
+		for (T &i : mat) i = i / std_dev;
+}
 
 template <class T>
 bool MatrEq(const cv::Mat_<T> &mat1, const cv::Mat_<T> &mat2) {

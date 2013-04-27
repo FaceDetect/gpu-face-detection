@@ -42,9 +42,9 @@ Feature::Feature(int offset,
 
 }
 
-int Feature::Eval(const cv::Mat_<int> &ii) const {
-	int sum = 0;
-	const int * data = ii.ptr<int>(0);
+float Feature::Eval(const cv::Mat_<float> &ii) const {
+	float sum = 0;
+	const float * data = ii.ptr<float>(0);
 
 	for (int i = 0; i < HAAR_MAX_FEATURES; i++) {
 		if (rects[i].wg == 0) continue;
