@@ -86,24 +86,46 @@ void GenerateFeatures(std::vector<Feature>& features)
 void LoadImages(const char* pos_list, const char* neg_list,
 		std::vector<LabeledImg> &container) {
 
+
+
 	ifstream pos_imgs(pos_list);
 	if (!pos_imgs.is_open()) throw std::runtime_error("Positive images list not found.");
+
+//	int num_pos = count(istreambuf_iterator<char>(pos_imgs), istreambuf_iterator<char>(), '\n');
 
 	ifstream neg_imgs(neg_list);
 	if (!neg_imgs.is_open()) throw std::runtime_error("Negative images list not found.");
 
+//	int num_neg = count(istreambuf_iterator<char>(neg_imgs), istreambuf_iterator<char>(), '\n');
+
+//	pos_imgs.close();
+//	neg_imgs.close();
+//	pos_imgs.open(pos_list);
+//	neg_imgs.open(neg_list);
+
+
 	string img_path;
 
-	while(pos_imgs >> img_path)
+	int i = 0;
+
+	while(pos_imgs >> img_path) {
+		i++;
 		container.push_back(make_pair((Mat_<float>)imread(img_path, CV_LOAD_IMAGE_GRAYSCALE), POSITIVE_LABEL));
+	}
+
+	cout << endl;
+
+	i = 0;
 
 	while(neg_imgs >> img_path) {
+		i++;
 
 		Mat img = imread(img_path, CV_LOAD_IMAGE_GRAYSCALE);
 		Mat res;
 		resize(img, res, Size(W_WIDTH, W_HEIGHT));
 
 		container.push_back(make_pair((Mat_<float>)res, NEGATIVE_LABEL));
+
 	}
 
 	pos_imgs.close();

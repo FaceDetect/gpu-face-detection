@@ -7,7 +7,7 @@ CPP_SRCS += \
 ../main.cpp 
 
 CC_SRCS += \
-../create_data_entry_test.cc \
+../ada_boost_test.cc \
 ../decision_stump_test.cc \
 ../feature_test.cc \
 ../get_mat_col_test.cc \
@@ -21,7 +21,7 @@ CC_SRCS += \
 ../to_ii_test.cc 
 
 OBJS += \
-./create_data_entry_test.o \
+./ada_boost_test.o \
 ./decision_stump_test.o \
 ./feature_test.o \
 ./get_mat_col_test.o \
@@ -36,7 +36,7 @@ OBJS += \
 ./to_ii_test.o 
 
 CC_DEPS += \
-./create_data_entry_test.d \
+./ada_boost_test.d \
 ./decision_stump_test.d \
 ./feature_test.d \
 ./get_mat_col_test.d \

@@ -7,17 +7,18 @@
 
 #include <gtest/gtest.h>
 #include "MatTest.h"
-
+#include "ClassifierTest.h"
 #include "DecisionStump.h"
 #include "DataSet.h"
 #include "utils.h"
 
 using namespace cv;
 
-class DecisionStumpTest: public MatTest {
+class DecisionStumpTest: public ClassifierTest {
 public:
 	virtual void SetUp() {
 		MatTest::SetUp();
+		ClassifierTest::SetUp();
 
 		stump1 = DecisionStump(1, 10, true);
 		stump2 = DecisionStump(1, 10, false);
@@ -42,33 +43,9 @@ TEST_F(DecisionStumpTest, Classification) {
 }
 
 TEST_F(DecisionStumpTest, Training) {
-	Data data(3, 3);
-	Mat_<label_t> labels1(3, 1);
-	Mat_<label_t> labels2(3, 1);
 
-	labels1(0, 0) = 0;
-	labels1(1, 0) = 0;
-	labels1(2, 0) = 1;
-
-	labels2(0, 0) = 1;
-	labels2(1, 0) = 1;
-	labels2(2, 0) = 0;
-
-	data(0, 0) = 1;
-	data(0, 1) = 1;
-	data(0, 2) = 1;
-	data(1, 0) = 1;
-	data(1, 1) = 5;
-	data(1, 2) = 1;
-	data(2, 0) = 1;
-	data(2, 1) = 7;
-	data(2, 2) = 1;
-
-	DataSet data_set1(data, labels1);
-	DataSet data_set2(data, labels2);
-
-	stump1.Train(data_set1);
-	stump2.Train(data_set2);
+	stump1.Train(data_set1, Mat_<float>::ones(3, 1));
+	stump2.Train(data_set2, Mat_<float>::ones(3, 1));
 
 	EXPECT_EQ(1, stump1.i_feature);
 	EXPECT_EQ(5, stump1.threshold);

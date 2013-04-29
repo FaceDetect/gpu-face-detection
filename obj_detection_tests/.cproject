@@ -40,11 +40,11 @@
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.1789007107" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
 								<option id="gnu.cpp.link.option.libs.952783452" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="gtest"/>
+									<listOptionValue builtIn="false" value="gtest_main"/>
 									<listOptionValue builtIn="false" value="opencv_core"/>
 									<listOptionValue builtIn="false" value="opencv_imgproc"/>
 									<listOptionValue builtIn="false" value="opencv_highgui"/>
 									<listOptionValue builtIn="false" value="obj_detection"/>
-									<listOptionValue builtIn="false" value="gtest_main"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.211932274" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/obj_detection/Debug}&quot;"/>

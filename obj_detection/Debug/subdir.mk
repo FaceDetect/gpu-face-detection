@@ -4,16 +4,22 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../AdaBoost.cpp \
+../DataSet.cpp \
 ../DecisionStump.cpp \
 ../Feature.cpp \
 ../utils.cpp 
 
 OBJS += \
+./AdaBoost.o \
+./DataSet.o \
 ./DecisionStump.o \
 ./Feature.o \
 ./utils.o 
 
 CPP_DEPS += \
+./AdaBoost.d \
+./DataSet.d \
 ./DecisionStump.d \
 ./Feature.d \
 ./utils.d 

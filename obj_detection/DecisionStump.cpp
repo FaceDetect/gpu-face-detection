@@ -15,16 +15,18 @@ using namespace cv;
 DecisionStump::DecisionStump() :
 		threshold(-1),
 		i_feature(-1),
-		gt(false) {
+		gt(false),
+		wg_err(FLT_MAX) {
 }
 
 DecisionStump::DecisionStump(int i, float threshold, bool gt) :
 				threshold(threshold),
 				i_feature(i),
-				gt(gt) {
+				gt(gt),
+				wg_err(FLT_MAX) {
 }
 
-cv::Mat_<label_t> DecisionStump::Classify(Data data) {
+cv::Mat_<label_t> DecisionStump::Classify(Data& data) {
 	Mat_<label_t> labels(data.rows, 1);
 
 	for (int i = 0; i < data.rows; i++) {
@@ -34,10 +36,7 @@ cv::Mat_<label_t> DecisionStump::Classify(Data data) {
 	return labels;
 }
 
-void DecisionStump::Train(DataSet& data_set) {
-	float least_err = FLT_MAX;
-//	cv::Mat_<double> best_err_arr;
-//	cv::Mat_<int> best_pred;
+void DecisionStump::Train(DataSet& data_set, cv::Mat_<float> W) {
 
 	for (int col = 0; col < data_set.data.cols; col++) {
 
@@ -51,13 +50,18 @@ void DecisionStump::Train(DataSet& data_set) {
 				Mat_<int> pred = curr_stump.Classify(data_set.data);
 				Mat_<int> err_arr = data_set.labels.clone();
 
-				compare(pred, data_set.labels, err_arr, CMP_NE);
+				for (int i = 0; i < err_arr.rows; i++) {
+					err_arr(i, 0) = (pred(i, 0) != data_set.labels(i, 0));
+				}
 
-				int curr_err = sum(err_arr).val[0];
+//				PrintMatrix(pred);
 
-				if (curr_err < least_err) {
+				float curr_err = sum(((Mat_<float>)err_arr).mul(W)).val[0];
+
+				if (curr_err < this->wg_err) {
 					*this = curr_stump;
-					least_err = curr_err;
+					this->wg_err = curr_err;
+					this->err_arr = err_arr.clone();
 				}
 			}
 		}

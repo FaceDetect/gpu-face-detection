@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -lgtest -lopencv_core -lopencv_imgproc -lopencv_highgui -lobj_detection -lgtest_main
+LIBS := -lgtest -lgtest_main -lopencv_core -lopencv_imgproc -lopencv_highgui -lobj_detection
 
