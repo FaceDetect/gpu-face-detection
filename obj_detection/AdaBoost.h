@@ -16,16 +16,24 @@
 #include "DataSet.h"
 
 class AdaBoost {
-//
 public:
+
+	// TODO: Define correct copy constructor.
 	AdaBoost(DataSet& data_set);
 	void TrainWeak();
 	std::vector<std::pair<DecisionStump, float> >& GetStumps();
-	cv::Mat_<int> Classify(Data& data);
+
+	void Classify(const Data& data, cv::Mat_<label_t>& labels);
+
+	//TODO: Test case
+	void Clear();
+
 private:
 //	void NormalizeWeights(cv::Mat_<double> &D);
 //	void UpdateWeights(cv::Mat_<double> &D, cv::Mat_<double> &err_arr, double beta);
 //	double CalcAlpha(double beta);
+	void InitWeights();
+
 
 	DataSet &data_set;
 	float threshold;

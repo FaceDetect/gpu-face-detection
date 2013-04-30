@@ -5,6 +5,7 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../AdaBoost.cpp \
+../CascadeTrainer.cpp \
 ../DataSet.cpp \
 ../DecisionStump.cpp \
 ../Feature.cpp \
@@ -12,6 +13,7 @@ CPP_SRCS += \
 
 OBJS += \
 ./AdaBoost.o \
+./CascadeTrainer.o \
 ./DataSet.o \
 ./DecisionStump.o \
 ./Feature.o \
@@ -19,6 +21,7 @@ OBJS += \
 
 CPP_DEPS += \
 ./AdaBoost.d \
+./CascadeTrainer.d \
 ./DataSet.d \
 ./DecisionStump.d \
 ./Feature.d \

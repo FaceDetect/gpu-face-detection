@@ -18,17 +18,7 @@ using namespace std;
 AdaBoost::AdaBoost(DataSet& data_set) :
 	data_set(data_set),
 	threshold(0) {
-
-	W.create(data_set.labels.rows, 1);
-
-	int num_pos = count(data_set.labels.begin(), data_set.labels.end(), POSITIVE_LABEL);
-	int num_neg = count(data_set.labels.begin(), data_set.labels.end(), NEGATIVE_LABEL);
-
-	for (int i = 0; i < data_set.labels.rows; i++) {
-		W(i, 0) = (data_set.labels(i, 0) == POSITIVE_LABEL) ? (1 / (2.0 * num_pos)) : (1 / (2.0 * num_neg));
-	}
-
-	PrintMatrix(W);
+	InitWeights();
 }
 
 //
@@ -129,17 +119,33 @@ std::vector<std::pair<DecisionStump, float> >& AdaBoost::GetStumps() {
 	return stumps;
 }
 
-cv::Mat_<int> AdaBoost::Classify(Data& data) {
+void AdaBoost::Classify(const Data& data, cv::Mat_<label_t>& labels) {
 	Mat_<float> prod = Mat_<float>::zeros(data.rows, 1);
-	Mat_<int> labels(data.rows, 1);
+	labels.create(data.rows, 1);
 
 	for (uint i = 0; i < stumps.size(); i++) {
-		prod += ((Mat_<float>)stumps[i].first.Classify(data) * stumps[i].second);
+		Mat_<label_t> labels_inner;
+		stumps[i].first.Classify(data, labels_inner);
+		prod += ((Mat_<float>)labels_inner * stumps[i].second);
 	}
 
 	for (int i = 0; i < labels.rows; i++) {
 		labels(i, 0) = prod(i, 0) >= threshold;
 	}
+}
 
-	return labels;
+void AdaBoost::Clear() {
+	stumps.clear();
+	InitWeights();
+}
+
+void AdaBoost::InitWeights() {
+	W.create(data_set.labels.rows, 1);
+
+	int num_pos = count(data_set.labels.begin(), data_set.labels.end(), POSITIVE_LABEL);
+	int num_neg = count(data_set.labels.begin(), data_set.labels.end(), NEGATIVE_LABEL);
+
+	for (int i = 0; i < data_set.labels.rows; i++) {
+		W(i, 0) = (data_set.labels(i, 0) == POSITIVE_LABEL) ? (1 / (2.0 * num_pos)) : (1 / (2.0 * num_neg));
+	}
 }

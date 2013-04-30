@@ -29,13 +29,15 @@ public:
 };
 
 TEST_F(DecisionStumpTest, Classification) {
-	Mat_<label_t> labels1 = stump1.Classify(mat3x3);
+	Mat_<label_t> labels1;
+	stump1.Classify(mat3x3, labels1);
 
 	EXPECT_EQ(0, labels1(0, 0));
 	EXPECT_EQ(0, labels1(1, 0));
 	EXPECT_EQ(1, labels1(2, 0));
 
-	Mat_<label_t> labels2 = stump2.Classify(mat3x3);
+	Mat_<label_t> labels2;
+	stump2.Classify(mat3x3, labels2);
 
 	EXPECT_EQ(1, labels2(0, 0));
 	EXPECT_EQ(1, labels2(1, 0));

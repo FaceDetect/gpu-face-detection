@@ -118,7 +118,7 @@ void ObjectRecognizer::LoadRects(rapidxml::xml_node<> *rect, std::vector<Rectang
 }
 
 void ObjectRecognizer::Recognize() {
-	const clock_t begin_time = clock();
+//	const clock_t begin_time = clock();
 
 	ComputeIntegralImages();
 
@@ -162,7 +162,7 @@ void ObjectRecognizer::Recognize() {
 	}
 
 
-	std::cout << endl << "Time elapsed: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
+//	std::cout << endl << "Time elapsed: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
 }
 
 void ObjectRecognizer::LoadImage(const char* path) {

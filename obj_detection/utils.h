@@ -30,7 +30,7 @@ typedef std::pair<cv::Mat_<float>, label_t> LabeledImg;
 int mygetch();
 void GenerateFeatures(std::vector<Feature>& features);
 void LoadImages(const char * pos_list, const char * neg_list, std::vector<LabeledImg> &container);
-std::vector<Feature> & GetFeatureSet();
+std::vector<Feature>& GetFeatureSet();
 
 
 template<typename T>

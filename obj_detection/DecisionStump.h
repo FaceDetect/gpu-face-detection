@@ -19,9 +19,10 @@ public:
 	DecisionStump();
 	DecisionStump(int i, float threshold, bool gt);
 
-	cv::Mat_<label_t> Classify(Data& data);
 
-	void Train(DataSet & data_set, cv::Mat_<float> W);
+	void Classify(const Data& data, cv::Mat_<label_t>& labels);
+
+	void Train(const DataSet & data_set, const cv::Mat_<float> W);
 	float threshold;
 	int i_feature;
 	bool gt;
