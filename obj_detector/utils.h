@@ -11,9 +11,9 @@
 #include <vector>
 #include <string>
 
-#define MAX(a,b) (( a ) >= ( b ) ? ( a ) : (  b ))
-#define MIN(a,b) (( a ) < ( b ) ? ( a ) : ( b ))
-#define SQR(a) (( a ) * ( a ))
+#define OR_MAX(a,b) (( a ) >= ( b ) ? ( a ) : (  b ))
+#define OR_MIN(a,b) (( a ) < ( b ) ? ( a ) : ( b ))
+#define OR_SQR(a) (( a ) * ( a ))
 
 std::vector<std::string> &Split(const std::string &s, char delim, std::vector<std::string> &elems);
 std::vector<std::string> Split(const std::string &s, char delim);

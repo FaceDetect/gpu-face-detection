@@ -9,8 +9,8 @@
 #define OBJECTRECOGNIZER_H_
 
 #include "HaarCascade.h"
-#include <rapidxml-1.13/rapidxml.hpp>
-#include <FreeImage.h>
+#include <rapidxml.h>
+#include <opencv2/opencv.hpp>
 
 class ObjectRecognizer {
 
@@ -48,8 +48,8 @@ private:
 
 	int pic_width;
 	int pic_height;
-	FIBITMAP *grayscaled_pic;
-	BYTE *grayscaled_bytes;
+	cv::Mat_<int> grayscaled_pic;
+	const int *grayscaled_bytes;
 	int *ii;
 	int *ii2;
 

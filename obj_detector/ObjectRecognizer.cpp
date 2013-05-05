@@ -13,24 +13,23 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+
 using namespace rapidxml;
 using namespace std;
+using namespace cv;
 
 
 
 ObjectRecognizer::ObjectRecognizer() :
 		pic_width(-1),
 		pic_height(-1),
-		grayscaled_pic(NULL),
+		grayscaled_pic(0, 0),
 		grayscaled_bytes(NULL),
 		ii(NULL),
 		ii2(NULL) {
-
-	FreeImage_Initialise(true);
 }
 
 ObjectRecognizer::~ObjectRecognizer() {
-	FreeImage_DeInitialise();
 }
 
 void ObjectRecognizer::LoadHaarCascade(const char *path) {
@@ -122,15 +121,17 @@ void ObjectRecognizer::Recognize() {
 
 	ComputeIntegralImages();
 
+//	std::cout << endl << "Time elapsed: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
+
 	double scale = 1.0;
 
 	int width = haar_cascade.window_width;
 	int height = haar_cascade.window_height;
 
-	while (MIN(width, height) <= MIN(pic_width, pic_height)) {
+	while (OR_MIN(width, height) <= OR_MIN(pic_width, pic_height)) {
 
-		int x_step = MAX(1, MIN(4, floor(width / 10)));
-		int y_step = MAX(1, MIN(4, floor(height / 10)));
+		int x_step = OR_MAX(1, OR_MIN(4, floor(width / 10)));
+		int y_step = OR_MAX(1, OR_MIN(4, floor(height / 10)));
 
 		double inv = 1.0 / (width * height);
 
@@ -138,7 +139,7 @@ void ObjectRecognizer::Recognize() {
 			for (int x = 0; x < pic_width - width; x += x_step) {
 
 				double mean = RectSum(ii, x, y, width, height) * inv;
-				double variance = RectSum(ii2, x, y, width, height) * inv - SQR(mean);
+				double variance = RectSum(ii2, x, y, width, height) * inv - OR_SQR(mean);
 
 				double std_dev = 1;
 
@@ -151,7 +152,7 @@ void ObjectRecognizer::Recognize() {
 
 
 				if (StagesPass(x, y, scale, inv, std_dev)) {
-					cout << x << " " << y << " " << width << " " << height << " ";
+					cout << x << " " << y << " " << width << " " << height << " " << scale << " ";
 				}
 			}
 		}
@@ -160,21 +161,20 @@ void ObjectRecognizer::Recognize() {
 		width = (int)(haar_cascade.window_width * scale);
 		height = (int)(haar_cascade.window_height * scale);
 	}
-
-
-//	std::cout << endl << "Time elapsed: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
 }
 
 void ObjectRecognizer::LoadImage(const char* path) {
-	FIBITMAP *colourful_pic = FreeImage_Load(FreeImage_GetFIFFromFilename(path), path, JPEG_ACCURATE);
-	grayscaled_pic = FreeImage_ConvertToGreyscale(colourful_pic);
-	FreeImage_Unload(colourful_pic);
+	//FIBITMAP *colourful_pic = FreeImage_Load(FreeImage_GetFIFFromFilename(path), path, JPEG_ACCURATE);
+	//grayscaled_pic = FreeImage_ConvertToGreyscale(colourful_pic);
+	//FreeImage_Unload(colourful_pic);
 
-	FreeImage_FlipVertical(grayscaled_pic);
+	//FreeImage_FlipVertical(grayscaled_pic);
 
-	pic_width = FreeImage_GetPitch(grayscaled_pic);
-	pic_height = FreeImage_GetHeight(grayscaled_pic);
-	grayscaled_bytes = FreeImage_GetBits(grayscaled_pic);
+	grayscaled_pic = imread(path, CV_LOAD_IMAGE_GRAYSCALE);
+
+	pic_width = grayscaled_pic.cols;
+	pic_height = grayscaled_pic.rows;
+	grayscaled_bytes = grayscaled_pic.ptr<int>();
 
 //	cout << endl;
 //	cout << endl;
@@ -194,7 +194,6 @@ void ObjectRecognizer::LoadImage(const char* path) {
 }
 
 void ObjectRecognizer::UnloadImage() {
-	FreeImage_Unload(grayscaled_pic);
 	delete [] ii;
 	delete [] ii2;
 }
@@ -220,7 +219,8 @@ void ObjectRecognizer::ComputeIntegralImages() {
 
 bool ObjectRecognizer::StagesPass(int x, int y, double scale, double inv, double std_dev) {
 
-	for (Stage &stage : haar_cascade.stages) {
+	for (uint i = 0; i < haar_cascade.stages.size(); i++) {
+		Stage &stage = haar_cascade.stages[i];
 		double tree_sum = TreesPass(stage, x, y, scale, inv, std_dev);
 		if (tree_sum < stage.threshold) {
 			return false;
@@ -234,7 +234,8 @@ double ObjectRecognizer::TreesPass(Stage &stage, int x, int y, double scale, dou
 
     double tree_sum = 0;
 
-    for (Tree &tree : stage.trees) {
+    for (uint i = 0; i < stage.trees.size(); i++) {
+    	Tree &tree = stage.trees[i];
         double rects_sum = RectsPass(tree, x, y, scale) * inv;
 
         if (rects_sum < tree.threshold * std_dev)
@@ -248,7 +249,8 @@ double ObjectRecognizer::TreesPass(Stage &stage, int x, int y, double scale, dou
 
 double ObjectRecognizer::RectsPass(Tree &tree, int x, int y, double scale) {
 	double rects_sum = 0;
-	for (Rectangle &rect : tree.feature.rects) {
+	for (uint i = 0; i < tree.feature.rects.size(); i++) {
+		Rectangle &rect = tree.feature.rects[i];
 		rects_sum = rects_sum + RectSum(ii, x + (int)(rect.x * scale),
 											y + (int)(rect.y * scale),
 											(int)(rect.w * scale),
