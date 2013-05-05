@@ -25,18 +25,34 @@ using namespace std;
 #define SCALE_UPDATE 0.8
 #define MAX_NUM_OBJS 100
 
+texture<int> tex_ii;
+texture<int> tex_ii2;
 
-__device__ inline int MatrVal(int *arr, int row, int col, int pic_width) {
 
-	return ((row == -1) || (col == -1)) ? 0 : arr[row * pic_width + col];
+__device__ int MatrVal(int row, int col, int pic_width) {
+
+	return ((row == -1) || (col == -1)) ? 0 : tex1Dfetch(tex_ii, row * pic_width + col);
 }
 
-__device__ inline int RectSum(int* ii, int x, int y, int w, int h, int pic_width) {
+__device__ int MatrVal2(int row, int col, int pic_width) {
 
-	return MatrVal(ii, y - 1, x - 1, pic_width) +
-		   MatrVal(ii, y + h - 1, x + w - 1, pic_width) -
-		   MatrVal(ii, y - 1, x + w - 1, pic_width) -
-		   MatrVal(ii, y + h - 1, x - 1, pic_width);
+	return ((row == -1) || (col == -1)) ? 0 : tex1Dfetch(tex_ii2, row * pic_width + col);
+}
+
+__device__ int RectSum(int x, int y, int w, int h, int pic_width) {
+
+	return MatrVal(y - 1, x - 1, pic_width) +
+		   MatrVal(y + h - 1, x + w - 1, pic_width) -
+		   MatrVal(y - 1, x + w - 1, pic_width) -
+		   MatrVal(y + h - 1, x - 1, pic_width);
+}
+
+__device__ int RectSum2(int x, int y, int w, int h, int pic_width) {
+
+	return MatrVal2(y - 1, x - 1, pic_width) +
+		   MatrVal2(y + h - 1, x + w - 1, pic_width) -
+		   MatrVal2(y - 1, x + w - 1, pic_width) -
+		   MatrVal2(y + h - 1, x - 1, pic_width);
 }
 
 __global__ void kernel_detect_objs(int *ii,
@@ -60,8 +76,8 @@ __global__ void kernel_detect_objs(int *ii,
 	if (((x + width) > img_width) || ((y + height) > img_height)) return;
 
 	float inv = 1.0 / (height * width);
-	float mean = RectSum(ii, x, y, width, height, img_width) * inv;
-	float variance = abs(RectSum(ii2, x, y, width, height, img_width) * inv - OR_SQR(mean));
+	float mean = RectSum(x, y, width, height, img_width) * inv;
+	float variance = abs(RectSum2(x, y, width, height, img_width) * inv - OR_SQR(mean));
 
 
 	float std_dev = sqrt(variance);
@@ -83,10 +99,10 @@ __global__ void kernel_detect_objs(int *ii,
 				Rectangle &rect = tree.feature.rects[k];
 				if (rect.wg == 0) break;
 
-				rects_sum = rects_sum + RectSum(ii, x + (int)(rect.x * scale),
-													y + (int)(rect.y * scale),
-													(int)(rect.w * scale),
-													(int)(rect.h * scale), img_width) * rect.wg;
+				rects_sum = rects_sum + RectSum(x + (int)(rect.x * scale),
+												y + (int)(rect.y * scale),
+												(int)(rect.w * scale),
+												(int)(rect.h * scale), img_width) * rect.wg;
 			}
 
 	        tree_sum += ((rects_sum * inv < tree.threshold * std_dev) ? tree.left_val : tree.right_val);
@@ -149,6 +165,9 @@ void gpuDetectObjs(cv::Mat_<int> img, HaarCascade& haar_cascade) {
 	HANDLE_ERROR(cudaMalloc((void **)&dev_ii2, sizeof(int) * img_width * img_height));
 	HANDLE_ERROR(cudaMemcpy((void *)dev_ii, (void *)ii, sizeof(int) * img_width * img_height, cudaMemcpyHostToDevice));
 	HANDLE_ERROR(cudaMemcpy((void *)dev_ii2, (void *)ii2, sizeof(int) * img_width * img_height, cudaMemcpyHostToDevice));
+	HANDLE_ERROR(cudaBindTexture(NULL, tex_ii, dev_ii, sizeof(int) * img_width * img_height));
+	HANDLE_ERROR(cudaBindTexture(NULL, tex_ii2, dev_ii2, sizeof(int) * img_width * img_height));
+
 
 	HANDLE_ERROR(cudaMalloc((void **)&dev_objects, sizeof(Rectangle) * max_num_objects));
 	HANDLE_ERROR(cudaMemcpy((void *)dev_objects, (void *)objects, sizeof(Rectangle) * max_num_objects, cudaMemcpyHostToDevice));
@@ -169,7 +188,7 @@ void gpuDetectObjs(cv::Mat_<int> img, HaarCascade& haar_cascade) {
 	cudaEventCreate(&stop);
 	cudaEventRecord(start, 0);
 
-	kernel_detect_objs<<<1, 1>>>(dev_ii,
+	kernel_detect_objs<<<100, 250>>>(dev_ii,
 										dev_ii2,
 										img_width,
 										img_height,
@@ -203,6 +222,9 @@ void gpuDetectObjs(cv::Mat_<int> img, HaarCascade& haar_cascade) {
 	HANDLE_ERROR(cudaFree(dev_ii2));
 	HANDLE_ERROR(cudaFree(dev_num_objs));
 	HANDLE_ERROR(cudaFree(dev_objects));
+	HANDLE_ERROR(cudaUnbindTexture(tex_ii));
+	HANDLE_ERROR(cudaUnbindTexture(tex_ii2));
+
 
 	cout << "After gpuDetectObjs" << endl;
 

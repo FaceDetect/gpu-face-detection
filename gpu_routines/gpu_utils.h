@@ -9,7 +9,7 @@
 #define GPU_UTILS_H_
 
 #define MATR_VAL(arr, r, c, w) \
-	(((( r ) == -1) || (( c ) == -1)) ? 0 : ( arr ) [ ( r ) * ( w ) + c ])
+	(( arr ) [ ( r ) * ( w ) + c ])
 
 void HandleError(cudaError_t err, const char *file, int line);
 
