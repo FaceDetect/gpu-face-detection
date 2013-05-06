@@ -43,23 +43,23 @@ void ObjectRecognizer::Recognize() {
 
 //	std::cout << endl << "Time elapsed: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
 
-//	double scale = 1.0;
+	double scale = 1.0;
 
-	int width = 123;//haar_cascade.window_width;
-	int height = 123;//haar_cascade.window_height;
+	int width = haar_cascade.window_width;
+	int height = haar_cascade.window_height;
 
-	int x = 244;
-	int y = 216;
-	float scale = 6.19174248;
-//	while (OR_MIN(width, height) <= OR_MIN(pic_width, pic_height)) {
-//
-//		int x_step = OR_MAX(1, OR_MIN(4, floor(width / 10)));
-//		int y_step = OR_MAX(1, OR_MIN(4, floor(height / 10)));
-//
+//	int x = 244;
+//	int y = 216;
+//	float scale = 6.19174248;
+	while (OR_MIN(width, height) <= OR_MIN(pic_width, pic_height)) {
+
+		int x_step = OR_MAX(1, OR_MIN(4, floor(width / 10)));
+		int y_step = OR_MAX(1, OR_MIN(4, floor(height / 10)));
+
 		double inv = 1.0 / (width * height);
 //
-//		for (int y = 0; y < pic_height - height; y += y_step) {
-//			for (int x = 0; x < pic_width - width; x += x_step) {
+		for (int y = 0; y < pic_height - height; y += y_step) {
+			for (int x = 0; x < pic_width - width; x += x_step) {
 
 //				cout << "X: " << x << endl;
 //				cout << "Y: " << y << endl << endl;;
@@ -76,24 +76,24 @@ void ObjectRecognizer::Recognize() {
 					std_dev = sqrt(variance);
 
 
-//				if (std_dev < 10)
-//					continue;
+				if (std_dev < 10)
+					continue;
 
-				cout << "CPU mean: " << mean << endl;
-				cout << "CPU variance: " << variance << endl;
-				cout << "CPU std_dev: " << std_dev << endl;
+//				cout << "CPU mean: " << mean << endl;
+//				cout << "CPU variance: " << variance << endl;
+//				cout << "CPU std_dev: " << std_dev << endl;
 
 //				if (gpuDetectObjsAt(ii, ii2, 6.19174248, 244, 216, 123, 123, pic_width, pic_height, haar_cascade)) {
 				if (StagesPass(x, y, scale, inv, std_dev)) {
 					cout << x << " " << y << " " << width << " " << height << " ";
 				}
-//			}
-//		}
-//
-//		scale = scale * 1.2;
-//		width = (int)(haar_cascade.window_width * scale);
-//		height = (int)(haar_cascade.window_height * scale);
-//	}
+			}
+		}
+
+		scale = scale * 1.2;
+		width = (int)(haar_cascade.window_width * scale);
+		height = (int)(haar_cascade.window_height * scale);
+	}
 }
 
 void ObjectRecognizer::LoadImage(const char* path) {

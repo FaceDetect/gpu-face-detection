@@ -17,6 +17,7 @@ using namespace cv;
 int main(int argv, char **args)
 {
 	HaarCascade haar_cascade;
+	std::cout << "../../data/lena.jpg" << " ";
 	Mat_<int> img = imread("../../data/lena.jpg", CV_LOAD_IMAGE_GRAYSCALE);
 
 	//imshow("test", img);
@@ -26,11 +27,11 @@ int main(int argv, char **args)
 	LoadCascade("../../data/haarcascade_frontalface_alt.xml", haar_cascade);
 	gpuDetectObjs(img, haar_cascade);
 
-	ObjectRecognizer obj_rec;
-	std::cout << "../../data/lena.jpg" << " ";
-	obj_rec.LoadHaarCascade("../../data/haarcascade_frontalface_alt.xml");
-	obj_rec.LoadImage("../../data/lena.jpg");
-	obj_rec.Recognize();
-	obj_rec.UnloadImage();
+//	ObjectRecognizer obj_rec;
+//	std::cout << "../../data/lena.jpg" << " ";
+//	obj_rec.LoadHaarCascade("../../data/haarcascade_frontalface_alt.xml");
+//	obj_rec.LoadImage("../../data/lena.jpg");
+//	obj_rec.Recognize();
+//	obj_rec.UnloadImage();
 
 }
