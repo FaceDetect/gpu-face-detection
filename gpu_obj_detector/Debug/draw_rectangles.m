@@ -1,6 +1,4 @@
 #!/usr/bin/octave -qf
-printf("Hello, world.");
-
 args = argv();
 
 imshow(imread(args{1}));

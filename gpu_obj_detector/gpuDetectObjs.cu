@@ -18,21 +18,11 @@
 
 using namespace std;
 
-#define RECT_SUM(ii, x, y, w, h, img_w) \
-	(MATR_VAL((ii), (y) - 1, (x) - 1, (img_w)) + \
-	MATR_VAL((ii), (y) + (h) - 1, (x) + (w) - 1, (img_w)) - \
-	MATR_VAL((ii), (y) - 1, (x) + (w) - 1, (img_w)) - \
-	MATR_VAL((ii), (y) + (h) - 1, (x) - 1, (img_w)))
-
-
-#define SCALE_UPDATE 0.8
-#define MAX_NUM_OBJS 100
-
-#define MAX_THREAD 128
+#define MAX_THREAD 256
 
 __device__ inline int MatrVal(int *arr, int row, int col, int pic_width) {
 
-	return /*((row == -1) || (col == -1)) ? 0 :*/ arr[row * pic_width + col];
+	return ((row == -1) || (col == -1)) ? 0 : arr[row * pic_width + col];
 }
 
 __device__ inline int RectSum(int* ii, int x, int y, int w, int h, int pic_width) {
@@ -58,10 +48,9 @@ __global__ void kernel_detect_objs(int num_stage,
 	*num_objs = 1;
 
 	int i_subwindow = threadIdx.x + blockIdx.x * blockDim.x;
-
 //	subwindows[i_subwindow].is_object = 0;
 
-	if (i_subwindow > num_subwindows) return;
+	if (!(i_subwindow < num_subwindows)) return;
 
 	float scale = subwindows[i_subwindow].scale;
 	int x = subwindows[i_subwindow].x;
@@ -143,8 +132,6 @@ void detectAtSubwindows(int *dev_ii, int *dev_ii2,
 	float elapsed = 0;
 	for (int i = 0; i < HAAR_MAX_STAGES; i++) {
 
-//		cout << "Stage: " << i << endl;
-
 		int num_subwindows = subwindows.size();
 		int num_blocks = ceilf((float) num_subwindows / MAX_THREAD);
 
@@ -152,7 +139,6 @@ void detectAtSubwindows(int *dev_ii, int *dev_ii2,
 		HANDLE_ERROR(cudaMalloc((void **)&dev_subwindows, sizeof(SubWindow) * num_subwindows));
 		HANDLE_ERROR(cudaMemcpy((void *)dev_subwindows, (void *)&subwindows[0], sizeof(SubWindow) * num_subwindows, cudaMemcpyHostToDevice));
 
-//		cout << "Subwindows before kernel: " << subwindows.size() << endl;
 
 		cudaEvent_t start, stop;
 		cudaEventCreate(&start);
@@ -176,16 +162,16 @@ void detectAtSubwindows(int *dev_ii, int *dev_ii2,
 		cudaEventElapsedTime(&tmp_elapsed, start, stop);
 
 		elapsed += tmp_elapsed;
-
+//		cout << "Elapsed by stage " << tmp_elapsed << endl;
 		HANDLE_ERROR(cudaMemcpy((void *)&subwindows[0], (void *)dev_subwindows, sizeof(SubWindow) * num_subwindows, cudaMemcpyDeviceToHost));
-//		remove_if(subwindows.begin(), subwindows.end(), isNonObject);
-		subwindows.erase(remove_if(subwindows.begin(), subwindows.end(), isNonObject), subwindows.end());
-//		cout << "Subwindows after kernel: " << subwindows.size() << endl << endl;
 
+		subwindows.erase(remove_if(subwindows.begin(), subwindows.end(), isNonObject), subwindows.end());
+//		cout << "Subwindows after stage " << i << " : " << subwindows.size() << endl << endl;
+		
 		HANDLE_ERROR(cudaFree(dev_subwindows));
 	}
 
-//	cout << "Kernel elapsed: " << elapsed << endl;;
+//	cout << "Kernel elapsed: " << elapsed << endl;
 
 }
 
@@ -200,14 +186,13 @@ void gpuDetectObjs(cv::Mat_<int> img, HaarCascade& haar_cascade) {
 	vector<SubWindow> subwindows;
 	PrecalcSubwindows(img_width, img_height, subwindows, haar_cascade);
 
-//	cout << "Subwindows count: " << subwindows.size() << endl;
 
 	float num_objs = 0;
 	float *dev_num_objs;
 	int *dev_ii;
 	int *dev_ii2;
 	HaarCascade *dev_haar_cascade;
-
+//	cout << "Subwindows count: " << subwindows.size() << endl;
 //	cout << "Image size = " << img_width << " x " << img_height << endl;
 
 	gpuComputeII(img.ptr<int>(), ii, ii2, img_width, img_height);
@@ -237,7 +222,7 @@ void gpuDetectObjs(cv::Mat_<int> img, HaarCascade& haar_cascade) {
 
 	float elapsed;
 	cudaEventElapsedTime(&elapsed, start, stop);
-//	cout << "Time elapsed: " << elapsed << endl;
+//	cout << "Total elapsed: " << elapsed << endl;
 
 	cudaMemcpy((void *)&num_objs, (void *)dev_num_objs, sizeof(float), cudaMemcpyDeviceToHost);
 

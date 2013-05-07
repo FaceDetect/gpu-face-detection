@@ -41,8 +41,6 @@ void ObjectRecognizer::Recognize() {
 
 	ComputeIntegralImages();
 
-//	std::cout << endl << "Time elapsed: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
-
 	double scale = 1.0;
 
 	int width = haar_cascade.window_width;
@@ -94,6 +92,9 @@ void ObjectRecognizer::Recognize() {
 		width = (int)(haar_cascade.window_width * scale);
 		height = (int)(haar_cascade.window_height * scale);
 	}
+
+//	std::cout << endl << "Time elapsed: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
+
 }
 
 void ObjectRecognizer::LoadImage(const char* path) {
@@ -104,8 +105,11 @@ void ObjectRecognizer::LoadImage(const char* path) {
 	pic_height = grayscaled_pic.rows;
 	grayscaled_bytes = grayscaled_pic.ptr<int>();
 
-	ii = new int[pic_width * pic_height];
-	ii2 = new int[pic_width * pic_height];
+	ii = new int[(pic_width + 1) * (pic_height + 1)];
+	ii2 = new int[(pic_width + 1) * (pic_height + 1)];
+	memset((void *)ii, 0, sizeof(int) * (pic_width + 1) * (pic_height + 1));
+	memset((void *)ii2, 0, sizeof(int) * (pic_width + 1) * (pic_height + 1));
+
 }
 
 void ObjectRecognizer::UnloadImage() {
@@ -116,19 +120,22 @@ void ObjectRecognizer::UnloadImage() {
 void ObjectRecognizer::ComputeIntegralImages() {
 
 //	gpuComputeII(grayscaled_bytes, ii, ii2, pic_height, pic_width);
-	for (int y = 0; y < pic_height; y++) {
-		for (int x = 0; x < pic_width; x++) {
+	for (int y = 1; y < pic_height + 1; y++) {
+		for (int x = 1; x < pic_width + 1; x++) {
+
 			SetMatrVal(ii, y, x,
-					   MatrVal(grayscaled_bytes, y, x) -
-					   MatrVal(ii, y - 1, x - 1) +
-					   MatrVal(ii, y, x - 1) +
-					   MatrVal(ii, y - 1, x));
+					   MatrVal(grayscaled_bytes, y - 1, x - 1, pic_width) -
+					   MatrVal(ii, y - 1, x - 1, pic_width + 1) +
+					   MatrVal(ii, y, x - 1, pic_width + 1) +
+					   MatrVal(ii, y - 1, x, pic_width + 1),
+					   pic_width + 1);
 
 			SetMatrVal(ii2, y, x,
-					   MatrVal(grayscaled_bytes, y, x) * MatrVal(grayscaled_bytes, y, x) -
-					   MatrVal(ii2, y - 1, x - 1) +
-					   MatrVal(ii2, y, x - 1) +
-					   MatrVal(ii2, y - 1, x));
+					   OR_SQR(MatrVal(grayscaled_bytes, y - 1, x - 1, pic_width))  -
+					   MatrVal(ii2, y - 1, x - 1, pic_width + 1) +
+					   MatrVal(ii2, y, x - 1, pic_width + 1) +
+					   MatrVal(ii2, y - 1, x, pic_width + 1),
+					   pic_width + 1);
 		}
 	}
 }
@@ -171,54 +178,13 @@ bool ObjectRecognizer::StagesPass(int x, int y, double scale, double inv, double
 	return true;
 }
 
-double ObjectRecognizer::TreesPass(Stage &stage, int x, int y, double scale, double inv, double std_dev) {
-
-    double tree_sum = 0;
-
-    for (int i = 0; i < HAAR_MAX_TREES; i++) {
-    	Tree& tree = stage.trees[i];
-    	if (!tree.valid) break;
-
-        double rects_sum = 0;//RectsPass(tree, x, y, scale) * inv;
-
-        for (int k = 0; k < HAAR_MAX_RECTS; k++) {
-			Rectangle &rect = tree.feature.rects[k];
-			if (rect.wg == 0) break;
-
-			rects_sum = rects_sum + RectSum(ii, x + (int)(rect.x * scale),
-												y + (int)(rect.y * scale),
-												(int)(rect.w * scale),
-												(int)(rect.h * scale)) * rect.wg;
-		}
-
-        tree_sum += ((rects_sum * inv < tree.threshold * std_dev) ? tree.left_val : tree.right_val);
-    }
-
-    return tree_sum;
-}
-
-double ObjectRecognizer::RectsPass(Tree &tree, int x, int y, double scale) {
-	double rects_sum = 0;
-	for (int i = 0; i < HAAR_MAX_RECTS; i++) {
-		Rectangle &rect = tree.feature.rects[i];
-		if (rect.wg == 0) break;
-
-		rects_sum = rects_sum + RectSum(ii, x + (int)(rect.x * scale),
-											y + (int)(rect.y * scale),
-											(int)(rect.w * scale),
-											(int)(rect.h * scale)) * rect.wg;
-	}
-
-	return rects_sum;
-}
-
 
 inline int ObjectRecognizer::RectSum(int* ii, int x, int y, int w, int h) {
 
-	return MatrVal(ii, y - 1, x - 1) +
-		   MatrVal(ii, y + h - 1, x + w - 1) -
-		   MatrVal(ii, y - 1, x + w - 1) -
-		   MatrVal(ii, y + h - 1, x - 1);
+	return MatrVal(ii, y, x, pic_width + 1) +
+		   MatrVal(ii, y + h, x + w, pic_width + 1) -
+		   MatrVal(ii, y, x + w, pic_width + 1) -
+		   MatrVal(ii, y + h, x, pic_width + 1);
 //
 //	return MatrVal(ii, y, x) +
 //		   MatrVal(ii, y + w, x + h) -

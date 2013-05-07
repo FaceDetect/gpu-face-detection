@@ -30,14 +30,14 @@ private:
 
 	inline int RectSum(int *ii, int x, int y, int w, int h);
 	template<typename T>
-	inline T MatrVal(T *arr, int row, int col) {
+	inline T MatrVal(T *arr, int row, int col, int width) {
 
-		return ((row == -1) || (col == -1)) ? 0 : arr[row * pic_width + col];
+		return arr[row * width + col];
 	}
 
 	template<typename T>
-	inline void SetMatrVal(T *arr, int row, int col, T val) {
-		arr[row * pic_width + col] = val;
+	inline void SetMatrVal(T *arr, int row, int col, T val, int width) {
+		arr[row * width + col] = val;
 	}
 
 

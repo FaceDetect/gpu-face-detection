@@ -10,12 +10,16 @@
 #include <iostream>
 #include "utils.h"
 #include "gpuDetectObjs.h"
+#include "Stage.h"
 
 using namespace std;
 using namespace cv;
 
 int main(int argv, char **args)
 {
+//	cout << "sizeof(Stage): " << sizeof(Stage) << endl;
+
+//
 	HaarCascade haar_cascade;
 	std::cout << "../../data/lena.jpg" << " ";
 	Mat_<int> img = imread("../../data/lena.jpg", CV_LOAD_IMAGE_GRAYSCALE);
