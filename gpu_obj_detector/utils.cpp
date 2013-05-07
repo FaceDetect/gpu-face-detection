@@ -120,6 +120,28 @@ void LoadStages(rapidxml::xml_node<>* stage, Stage *stages) {
 
 }
 
+void ComputeIIs(const int* input, int* ii, int* ii2, int img_width) {
+	//	gpuComputeII(grayscaled_bytes, ii, ii2, pic_height, pic_width);
+	for (int y = 1; y < img_width + 1; y++) {
+		for (int x = 1; x < img_width + 1; x++) {
+
+			SetMatrVal(ii, y, x,
+					   MatrVal(input, y - 1, x - 1, img_width) -
+					   MatrVal(ii, y - 1, x - 1, img_width + 1) +
+					   MatrVal(ii, y, x - 1, img_width + 1) +
+					   MatrVal(ii, y - 1, x, img_width + 1),
+					   img_width + 1);
+
+			SetMatrVal(ii2, y, x,
+					   OR_SQR(MatrVal(input, y - 1, x - 1, img_width))  -
+					   MatrVal(ii2, y - 1, x - 1, img_width + 1) +
+					   MatrVal(ii2, y, x - 1, img_width + 1) +
+					   MatrVal(ii2, y - 1, x, img_width + 1),
+					   img_width + 1);
+		}
+	}
+}
+
 void LoadCascade(const char *path, HaarCascade& haar_cascade) {
 
 	char *file_content;

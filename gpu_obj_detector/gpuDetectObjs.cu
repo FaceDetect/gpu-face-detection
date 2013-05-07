@@ -22,22 +22,22 @@ using namespace std;
 
 __device__ inline int MatrVal(int *arr, int row, int col, int pic_width) {
 
-	return ((row == -1) || (col == -1)) ? 0 : arr[row * pic_width + col];
+	return arr[row * pic_width + col];
 }
 
-__device__ inline int RectSum(int* ii, int x, int y, int w, int h, int pic_width) {
+__device__ inline int RectSum(int* ii, int x, int y, int w, int h, int ii_width) {
 
-	return MatrVal(ii, y - 1, x - 1, pic_width) +
-		   MatrVal(ii, y + h - 1, x + w - 1, pic_width) -
-		   MatrVal(ii, y - 1, x + w - 1, pic_width) -
-		   MatrVal(ii, y + h - 1, x - 1, pic_width);
+	return MatrVal(ii, y, x, ii_width) +
+		   MatrVal(ii, y + h, x + w, ii_width) -
+		   MatrVal(ii, y, x + w, ii_width) -
+		   MatrVal(ii, y + h, x, ii_width);
 }
 
 __global__ void kernel_detect_objs(int num_stage,
 								   int *ii,
 								   int *ii2,
-								   int img_width,
-								   int img_height,
+								   int ii_width,
+								   int ii_height,
 								   HaarCascade *haar_cascade,
 								   SubWindow *subwindows,
 								   int num_subwindows,
@@ -59,8 +59,8 @@ __global__ void kernel_detect_objs(int num_stage,
 	int height = subwindows[i_subwindow].h;
 
 	float inv = 1.0 / (height * width);
-	float mean = RectSum(ii, x, y, width, height, img_width) * inv;
-	float variance = abs(RectSum(ii2, x, y, width, height, img_width) * inv - OR_SQR(mean));
+	float mean = RectSum(ii, x, y, width, height, ii_width) * inv;
+	float variance = abs(RectSum(ii2, x, y, width, height, ii_width) * inv - OR_SQR(mean));
 
 	float std_dev = sqrt(variance);
 
@@ -81,7 +81,7 @@ __global__ void kernel_detect_objs(int num_stage,
 			rects_sum = rects_sum + RectSum(ii, x + (int)(rect.x * scale),
 												y + (int)(rect.y * scale),
 												(int)(rect.w * scale),
-												(int)(rect.h * scale), img_width) * rect.wg;
+												(int)(rect.h * scale), ii_width) * rect.wg;
 		}
 
 		tree_sum += ((rects_sum * inv < tree.threshold * std_dev) ? tree.left_val : tree.right_val);
@@ -148,8 +148,8 @@ void detectAtSubwindows(int *dev_ii, int *dev_ii2,
 		kernel_detect_objs<<<num_blocks, MAX_THREAD>>>(i,
 											dev_ii,
 											dev_ii2,
-											img_width,
-											img_height,
+											img_width + 1,
+											img_height + 1,
 											dev_haar_cascade,
 											dev_subwindows,
 											subwindows.size(),
@@ -179,9 +179,13 @@ void detectAtSubwindows(int *dev_ii, int *dev_ii2,
 void gpuDetectObjs(cv::Mat_<int> img, HaarCascade& haar_cascade) {
 	int img_width = img.rows;
 	int img_height = img.cols;
+//	int img_size = img_height * img_width;
+	int ii_size = (img_height + 1) * (img_width + 1);
 
-	int *ii = new int[img_height * img_width];
-	int *ii2 = new int[img_height * img_width];
+
+	int *ii = new int[ii_size];
+	int *ii2 = new int[ii_size];
+
 
 	vector<SubWindow> subwindows;
 	PrecalcSubwindows(img_width, img_height, subwindows, haar_cascade);
@@ -195,15 +199,15 @@ void gpuDetectObjs(cv::Mat_<int> img, HaarCascade& haar_cascade) {
 //	cout << "Subwindows count: " << subwindows.size() << endl;
 //	cout << "Image size = " << img_width << " x " << img_height << endl;
 
-	gpuComputeII(img.ptr<int>(), ii, ii2, img_width, img_height);
+	ComputeIIs(img.ptr<int>(), ii, ii2, img_width);
 
 	HANDLE_ERROR(cudaMalloc((void **)&dev_haar_cascade, sizeof(haar_cascade)));
 	HANDLE_ERROR(cudaMemcpy((void *)dev_haar_cascade, (void *)&haar_cascade, sizeof(haar_cascade), cudaMemcpyHostToDevice));
 
-	HANDLE_ERROR(cudaMalloc((void **)&dev_ii, sizeof(int) * img_width * img_height));
-	HANDLE_ERROR(cudaMalloc((void **)&dev_ii2, sizeof(int) * img_width * img_height));
-	HANDLE_ERROR(cudaMemcpy((void *)dev_ii, (void *)ii, sizeof(int) * img_width * img_height, cudaMemcpyHostToDevice));
-	HANDLE_ERROR(cudaMemcpy((void *)dev_ii2, (void *)ii2, sizeof(int) * img_width * img_height, cudaMemcpyHostToDevice));
+	HANDLE_ERROR(cudaMalloc((void **)&dev_ii, sizeof(int) * ii_size));
+	HANDLE_ERROR(cudaMalloc((void **)&dev_ii2, sizeof(int) * ii_size));
+	HANDLE_ERROR(cudaMemcpy((void *)dev_ii, (void *)ii, sizeof(int) * ii_size, cudaMemcpyHostToDevice));
+	HANDLE_ERROR(cudaMemcpy((void *)dev_ii2, (void *)ii2, sizeof(int) * ii_size, cudaMemcpyHostToDevice));
 
 
 	HANDLE_ERROR(cudaMalloc((void **)&dev_num_objs, sizeof(float)));

@@ -118,26 +118,7 @@ void ObjectRecognizer::UnloadImage() {
 }
 
 void ObjectRecognizer::ComputeIntegralImages() {
-
-//	gpuComputeII(grayscaled_bytes, ii, ii2, pic_height, pic_width);
-	for (int y = 1; y < pic_height + 1; y++) {
-		for (int x = 1; x < pic_width + 1; x++) {
-
-			SetMatrVal(ii, y, x,
-					   MatrVal(grayscaled_bytes, y - 1, x - 1, pic_width) -
-					   MatrVal(ii, y - 1, x - 1, pic_width + 1) +
-					   MatrVal(ii, y, x - 1, pic_width + 1) +
-					   MatrVal(ii, y - 1, x, pic_width + 1),
-					   pic_width + 1);
-
-			SetMatrVal(ii2, y, x,
-					   OR_SQR(MatrVal(grayscaled_bytes, y - 1, x - 1, pic_width))  -
-					   MatrVal(ii2, y - 1, x - 1, pic_width + 1) +
-					   MatrVal(ii2, y, x - 1, pic_width + 1) +
-					   MatrVal(ii2, y - 1, x, pic_width + 1),
-					   pic_width + 1);
-		}
-	}
+	ComputeIIs(grayscaled_bytes, ii, ii2, pic_width);
 }
 
 bool ObjectRecognizer::StagesPass(int x, int y, double scale, double inv, double std_dev) {

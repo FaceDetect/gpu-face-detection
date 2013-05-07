@@ -29,17 +29,6 @@ private:
 	double RectsPass(Tree &tree, int x, int y, double scale);
 
 	inline int RectSum(int *ii, int x, int y, int w, int h);
-	template<typename T>
-	inline T MatrVal(T *arr, int row, int col, int width) {
-
-		return arr[row * width + col];
-	}
-
-	template<typename T>
-	inline void SetMatrVal(T *arr, int row, int col, T val, int width) {
-		arr[row * width + col] = val;
-	}
-
 
 	int pic_width;
 	int pic_height;
