@@ -185,8 +185,9 @@ int shorts_to_int(short s1, short s2) {
 
 }
 
-void HaarCascadeToArrays(HaarCascade& haar_cascade, int4** stages,
-		int4** features, int4** rects, float** weights) {
+void HaarCascadeToArrays(HaarCascade& haar_cascade,
+		int4** stages, int4** features, int4** rects, float** weights,
+		int *num_stages, int *num_features, int *num_rects) {
 
 	vector<int4> tmp_stages;
 	vector<int4> tmp_features;
@@ -242,10 +243,15 @@ void HaarCascadeToArrays(HaarCascade& haar_cascade, int4** stages,
 		tmp_stages.push_back(res_stage);
 	}
 
-//	cout << "Total stages: " << tmp_stages.size() << endl;
-//	cout << "Total features: " << tmp_features.size() << endl;
-//	cout << "Total rects: " << tmp_rects.size() << endl;
-//	cout << "Total weights: " << tmp_weights.size() << endl << endl;
+//	cout << "Total stages size: " << tmp_stages.size() * sizeof(int4) << endl;
+//	cout << "Total features size: " << tmp_features.size() * sizeof(int4) << endl;
+//	cout << "Total rects size: " << tmp_rects.size() * sizeof(int4) << endl;
+//	cout << "Total weights size: " << tmp_weights.size() * sizeof(float) << endl << endl;
+
+
+	 if (num_stages != NULL) (*num_stages) = tmp_stages.size();
+	 if (num_features != NULL) (*num_features) = tmp_features.size();
+	 if (num_rects != NULL) (*num_rects) = tmp_rects.size();
 
 
 	(*stages) = new int4[tmp_stages.size()];

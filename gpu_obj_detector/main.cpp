@@ -17,9 +17,8 @@ using namespace cv;
 
 int main(int argv, char **args)
 {
-//	cout << "sizeof(Stage): " << sizeof(Stage) << endl;
 
-//
+
 //	HaarCascade haar_cascade;
 //	std::cout << "../../data/lena.jpg" << " ";
 //	Mat_<int> img = imread("../../data/lena.jpg", CV_LOAD_IMAGE_GRAYSCALE);
@@ -29,13 +28,7 @@ int main(int argv, char **args)
 //
 //
 //	LoadCascade("../../data/haarcascade_frontalface_alt.xml", haar_cascade);
-//	int4 *stages;
-//	int4 *features;
-//	int4 *rects;
-//	float *wgs;
-
-//	HaarCascadeToArrays(haar_cascade, &stages, &features, &rects, &wgs);
-
+//
 //	gpuDetectObjs(img, haar_cascade);
 
 	ObjectRecognizer obj_rec;

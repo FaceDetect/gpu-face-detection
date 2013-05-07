@@ -34,7 +34,7 @@ ObjectRecognizer::~ObjectRecognizer() {
 void ObjectRecognizer::LoadHaarCascade(const char *path) {
 
 	LoadCascade(path, haar_cascade);
-	HaarCascadeToArrays(haar_cascade, &stages, &features, &rects, &wgs);
+	HaarCascadeToArrays(haar_cascade, &stages, &features, &rects, &wgs, NULL, NULL, NULL);
 }
 
 void ObjectRecognizer::Recognize() {
