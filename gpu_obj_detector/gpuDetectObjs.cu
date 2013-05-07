@@ -95,7 +95,6 @@ __global__ void kernel_detect_objs(int num_stage,
 
 }
 
-
 void PrecalcSubwindows(int img_width, int img_height, vector<SubWindow>& subwindows, HaarCascade& haar_cascade) {
 
 	float scale = 1.0;
@@ -181,7 +180,6 @@ void gpuDetectObjs(cv::Mat_<int> img, HaarCascade& haar_cascade) {
 	int img_height = img.cols;
 //	int img_size = img_height * img_width;
 	int ii_size = (img_height + 1) * (img_width + 1);
-
 
 	int *ii = new int[ii_size];
 	int *ii2 = new int[ii_size];

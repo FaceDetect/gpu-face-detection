@@ -10,6 +10,7 @@
 
 #include "HaarCascade.h"
 #include <opencv2/opencv.hpp>
+#include "utils.h"
 
 class ObjectRecognizer {
 
@@ -38,6 +39,10 @@ private:
 	int *ii2;
 
 	HaarCascade haar_cascade;
+	int4 *stages;
+	int4 *features;
+	int4 *rects;
+	float *wgs;
 };
 
 #endif /* OBJECTRECOGNIZER_H_ */
