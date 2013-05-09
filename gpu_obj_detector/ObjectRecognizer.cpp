@@ -34,7 +34,6 @@ ObjectRecognizer::~ObjectRecognizer() {
 void ObjectRecognizer::LoadHaarCascade(const char *path) {
 
 	LoadCascade(path, haar_cascade);
-	HaarCascadeToArrays(haar_cascade, &stages, &features, &rects, &wgs, NULL, NULL, NULL);
 }
 
 void ObjectRecognizer::Recognize() {
@@ -116,65 +115,43 @@ void ObjectRecognizer::LoadImage(const char* path) {
 void ObjectRecognizer::UnloadImage() {
 	delete [] ii;
 	delete [] ii2;
-	delete [] stages;
-	delete [] features;
-	delete [] rects;
-	delete [] wgs;
 }
 
 void ObjectRecognizer::ComputeIntegralImages() {
 	ComputeIIs(grayscaled_bytes, ii, ii2, pic_width);
 }
 
-float int_to_float(int i) {
-	union float_int {
-		float f;
-		int i;
-	};
-
-	float_int fi;
-
-	fi.i = i;
-	return fi.f;
-
-}
-
 bool ObjectRecognizer::StagesPass(int x, int y, double scale, double inv, double std_dev) {
 
 	for (int i = 0; i < HAAR_MAX_STAGES; i++) {
-		int4 stage = stages[i];
-		float stage_thr = int_to_float(stage.x);
-		float tree_sum = 0;
-		short flen = (stage.w >> 16) & 0xffff;
-		short fid = stage.w & 0xffff;
+		Stage &stage = haar_cascade.stages[i];
+		if (!stage.valid) break;
 
-	    for (short j = fid; j < fid + flen; j++) {
-	    	int4 feature = features[j];
+		double tree_sum = 0;//TreesPass(stage, x, y, scale, inv, std_dev);
 
 
-	        float rects_sum = 0;//RectsPass(tree, x, y, scale) * inv;
+	    for (int j = 0; j < HAAR_MAX_TREES; j++) {
+	    	Tree& tree = stage.trees[j];
+	    	if (!tree.valid) break;
 
-	        short rlen = (feature.w >> 16) & 0xffff;
-	        short rid = feature.w & 0xffff;
-	        float f_thr = int_to_float(feature.x);
-	        float f_lval = int_to_float(feature.y);
-	        float f_rval = int_to_float(feature.z);
+	        double rects_sum = 0;//RectsPass(tree, x, y, scale) * inv;
 
-	        for (short k = rid; k < rid + rlen; k++) {
-				int4 rect = rects[k];
+	        for (int k = 0; k < HAAR_MAX_RECTS; k++) {
+				Rectangle &rect = tree.feature.rects[k];
+				if (rect.wg == 0) break;
 
-				rects_sum = rects_sum + RectSum(ii, x + (int)(rect.w * scale),
-													y + (int)(rect.x * scale),
-													(int)(rect.y * scale),
-													(int)(rect.z * scale)) * wgs[k];
+				rects_sum = rects_sum + RectSum(ii, x + (int)(rect.x * scale),
+													y + (int)(rect.y * scale),
+													(int)(rect.w * scale),
+													(int)(rect.h * scale)) * rect.wg;
 			}
 
-	        tree_sum += ((rects_sum * inv < f_thr * std_dev) ? f_lval : f_rval);
+	        tree_sum += ((rects_sum * inv < tree.threshold * std_dev) ? tree.left_val : tree.right_val);
 	    }
 
 
 
-		if (tree_sum < stage_thr) {
+		if (tree_sum < stage.threshold) {
 			return false;
 		}
 	}

@@ -9,9 +9,6 @@
 #include <stdio.h>
 #include <sstream>
 #include <rapidxml.h>
-#include "Feature.h"
-#include <cstring>
-#include <iostream>
 
 using namespace std;
 using namespace rapidxml;
@@ -167,103 +164,5 @@ void LoadCascade(const char *path, HaarCascade& haar_cascade) {
 	LoadStages(stages->first_node(), haar_cascade.stages);
 
 	delete [] file_content;
-}
-
-
-int shorts_to_int(short s1, short s2) {
-	union shorts_int {
-		short s[2];
-		int i;
-	};
-
-	shorts_int si;
-
-	si.s[0] = s1;
-	si.s[1] = s2;
-
-	return si.i;
-
-}
-
-void HaarCascadeToArrays(HaarCascade& haar_cascade,
-		int4** stages, int4** features, int4** rects, float** weights,
-		int *num_stages, int *num_features, int *num_rects) {
-
-	vector<int4> tmp_stages;
-	vector<int4> tmp_features;
-	vector<int4> tmp_rects;
-	vector<float> tmp_weights;
-
-	int features_total = 0;
-	int rects_total = 0;
-
-	for (int i = 0; i < HAAR_MAX_STAGES; i++) {
-		Stage& stage = haar_cascade.stages[i];
-		if (!stage.valid) break;
-		int4 res_stage;
-
-		short fid = features_total;
-
-		for (int j = 0; j < HAAR_MAX_TREES; j++) {
-			Tree& tree = stage.trees[j];
-			if (!tree.valid) break;
-
-			int4 res_feature;
-			short rect_id = rects_total;
-			for (int k = 0; k < HAAR_MAX_RECTS; k++) {
-				Rectangle& rect = tree.feature.rects[k];
-				if (rect.wg == 0) break;
-
-				int4 res_rect;
-				float res_wg;
-				res_rect.w = rect.x;
-				res_rect.x = rect.y;
-				res_rect.y = rect.w;
-				res_rect.z = rect.h;
-				res_wg = rect.wg;
-
-				tmp_rects.push_back(res_rect);
-				tmp_weights.push_back(res_wg);
-				rects_total++;
-			}
-
-			res_feature.w = shorts_to_int(rect_id, (short) rects_total - rect_id);
-			res_feature.x = reinterpret_cast<int&>(tree.threshold);
-			res_feature.y = reinterpret_cast<int&>(tree.left_val);
-			res_feature.z = reinterpret_cast<int&>(tree.right_val);
-			tmp_features.push_back(res_feature);
-			features_total++;
-		}
-
-		res_stage.w = shorts_to_int(fid, (short) features_total - fid);
-		res_stage.x = reinterpret_cast<int&>(stage.threshold);
-		res_stage.y = stage.parent;
-		res_stage.z = stage.next;
-
-		tmp_stages.push_back(res_stage);
-	}
-
-//	cout << "Total stages size: " << tmp_stages.size() * sizeof(int4) << endl;
-//	cout << "Total features size: " << tmp_features.size() * sizeof(int4) << endl;
-//	cout << "Total rects size: " << tmp_rects.size() * sizeof(int4) << endl;
-//	cout << "Total weights size: " << tmp_weights.size() * sizeof(float) << endl << endl;
-
-
-	 if (num_stages != NULL) (*num_stages) = tmp_stages.size();
-	 if (num_features != NULL) (*num_features) = tmp_features.size();
-	 if (num_rects != NULL) (*num_rects) = tmp_rects.size();
-
-
-	(*stages) = new int4[tmp_stages.size()];
-	(*features) = new int4[tmp_features.size()];
-	(*rects) = new int4[tmp_rects.size()];
-	(*weights) = new float[tmp_weights.size()];
-
-
-	memcpy((*stages), &tmp_stages[0], sizeof(int4) * tmp_stages.size());
-	memcpy((*features), &tmp_features[0], sizeof(int4) * tmp_features.size());
-	memcpy((*rects), &tmp_rects[0], sizeof(int4) * tmp_rects.size());
-	memcpy((*weights), &tmp_weights[0], sizeof(float) * tmp_weights.size());
-
 }
 

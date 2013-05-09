@@ -9,14 +9,17 @@ CPP_SRCS += \
 ../utils.cpp 
 
 CU_SRCS += \
-../gpuDetectObjs.cu 
+../gpuDetectObjs.cu \
+../gpu_utils.cu 
 
 CU_DEPS += \
-./gpuDetectObjs.d 
+./gpuDetectObjs.d \
+./gpu_utils.d 
 
 OBJS += \
 ./ObjectRecognizer.o \
 ./gpuDetectObjs.o \
+./gpu_utils.o \
 ./main.o \
 ./utils.o 
 
