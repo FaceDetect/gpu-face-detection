@@ -28,8 +28,8 @@ public:
 		r5 = Rectangle(8, 17, 5, 2, 2);
 
 
-		f2rects = Feature(W_WIDTH, r1, r2);
-		f3rects = Feature(W_WIDTH, r3, r4, r5);
+		f2rects = Feature(W_WIDTH + 1, r1, r2);
+		f3rects = Feature(W_WIDTH + 1, r3, r4, r5);
 	}
 
 	Feature f2rects;
@@ -43,10 +43,10 @@ public:
 };
 
 TEST_F(FeatureTest, RectsCoords) {
-	EXPECT_EQ(3 + 7 * W_WIDTH, f2rects.rects_coords[0].p0);
-	EXPECT_EQ(3 + 14 + 7 * W_WIDTH, f2rects.rects_coords[0].p1);
-	EXPECT_EQ(3 + (7 + 4) * W_WIDTH, f2rects.rects_coords[0].p2);
-	EXPECT_EQ(3 + 14 + (7 + 4) * W_WIDTH, f2rects.rects_coords[0].p3);
+	EXPECT_EQ(3 + 7 * (W_WIDTH + 1), f2rects.rects_coords[0].p0);
+	EXPECT_EQ(3 + 14 + 7 * (W_WIDTH + 1), f2rects.rects_coords[0].p1);
+	EXPECT_EQ(3 + (7 + 4) * (W_WIDTH + 1), f2rects.rects_coords[0].p2);
+	EXPECT_EQ(3 + 14 + (7 + 4) * (W_WIDTH + 1), f2rects.rects_coords[0].p3);
 }
 
 TEST_F(FeatureTest, FeatureEval) {
@@ -62,7 +62,7 @@ TEST_F(FeatureTest, FeatureEval) {
 	float f3res_expect = 0;
 
 
-	for (int i = 0; i < HAAR_MAX_FEATURES; i++) {
+	for (int i = 0; i < HAAR_MAX_RECTS; i++) {
 
 		int start_col = f2rects.rects[i].x;
 		int end_col = f2rects.rects[i].x + f2rects.rects[i].w;

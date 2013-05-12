@@ -40,17 +40,21 @@ inline T sqr(const T &arg) {
 
 template <typename T>
 void ToIntegralImage(cv::Mat_<T> &mat, int mode) {
-	for (int y = 0; y < mat.rows; y++) {
-		for (int x = 0; x < mat.cols; x++) {
+	cv::Mat_<T> ii = cv::Mat_<T>::zeros(mat.rows + 1, mat.cols + 1);
 
-			T p4 = mat(y, x);
-			T p3 = (x == 0) ? 0 : mat(y, x - 1);
-			T p2 = (y == 0) ? 0 : mat(y - 1, x);
-			T p1 = ((x == 0) || (y == 0)) ? 0 : mat(y - 1, x - 1);
+	for (int y = 1; y < mat.rows + 1; y++) {
+		for (int x = 1; x < mat.cols + 1; x++) {
 
-			mat(y, x) = ((mode == SQUARED_SUM) ? sqr(p4) : p4) - p1 + p3 + p2;
+			T p4 = mat(y - 1, x - 1);
+			T p3 = ii(y, x - 1);
+			T p2 = ii(y - 1, x);
+			T p1 = ii(y - 1, x - 1);
+
+			ii(y, x) = ((mode == SQUARED_SUM) ? sqr(p4) : p4) - p1 + p3 + p2;
 		}
 	}
+
+	mat = ii.clone();
 }
 
 template<class T>

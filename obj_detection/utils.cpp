@@ -31,14 +31,14 @@ int mygetch()
 
 void GenerateFeatures(std::vector<Feature>& features)
 {
-    int offset = W_WIDTH;
+    int offset = W_WIDTH + 1;
     for( int x = 0; x < W_WIDTH; x++ )
     {
         for( int y = 0; y < W_HEIGHT; y++ )
         {
-            for( int dx = 1; dx < W_WIDTH; dx++ )
+            for( int dx = 1; dx <= W_WIDTH; dx++ )
             {
-                for( int dy = 1; dy < W_HEIGHT; dy++ )
+                for( int dy = 1; dy <= W_HEIGHT; dy++ )
                 {
                     // haar_x2
                     if ( (x+dx*2 < W_WIDTH) && (y+dy < W_HEIGHT) )

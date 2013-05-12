@@ -13,7 +13,7 @@
 
 #include <opencv2/opencv.hpp>
 
-#define HAAR_MAX_FEATURES 3
+#define HAAR_MAX_RECTS 3
 
 class Feature {
 public:
@@ -28,11 +28,11 @@ public:
 	void PrintInfo();
 //	void write( FileStorage &fs ) const;
 
-	Rectangle rects[HAAR_MAX_FEATURES];
+	Rectangle rects[HAAR_MAX_RECTS];
 
 	struct {
 		int p0, p1, p2, p3;
-	} rects_coords[HAAR_MAX_FEATURES];
+	} rects_coords[HAAR_MAX_RECTS];
 };
 
 
