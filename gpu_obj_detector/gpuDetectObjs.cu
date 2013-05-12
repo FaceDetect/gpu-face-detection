@@ -17,7 +17,7 @@
 #include <algorithm>
 
 using namespace std;
-#define MAX_THREAD 200
+#define MAX_THREAD 320
 
 __device__ inline int MatrVal(int *arr, int row, int col, int pic_width) {
 
@@ -117,7 +117,7 @@ __global__ void kernel_detect_objs(int num_stage,
 //	*num_objs = 123;
 	// 244 216 123 123 6.19174
 
-	*num_objs = 1;
+//	*num_objs = 1;
 
 	int i_subwindow = threadIdx.x + blockIdx.x * blockDim.x;
 //	subwindows[i_subwindow].is_object = 0;
@@ -180,7 +180,7 @@ void PrecalcSubwindows(int img_width, int img_height, vector<SubWindow>& subwind
 		int x_step = OR_MAX(1, OR_MIN(4, width / 10));
 		int y_step = OR_MAX(1, OR_MIN(4, height / 10));
 
-		for (int y = 0; y < img_width - height; y += y_step) {
+		for (int y = 0; y < img_height - height; y += y_step) {
 			for (int x = 0; x < img_width - width; x += x_step) {
 				subwindows.push_back(SubWindow(x, y, width, height, scale));
 			}
@@ -238,12 +238,12 @@ void detectAtSubwindows(int *dev_ii, int *dev_ii2,
 		HANDLE_ERROR(cudaMemcpy((void *)&subwindows[0], (void *)dev_subwindows, sizeof(SubWindow) * num_subwindows, cudaMemcpyDeviceToHost));
 
 		subwindows.erase(remove_if(subwindows.begin(), subwindows.end(), isNonObject), subwindows.end());
-//		cout << "Subwindows after stage " << i << " : " << subwindows.size() << endl << endl;
+		cout << "Subwindows after stage " << i << " : " << subwindows.size() << endl << endl;
 		
 		HANDLE_ERROR(cudaFree(dev_subwindows));
 	}
 
-//	cout << "Kernel elapsed: " << elapsed << endl;
+	cout << "Kernel elapsed: " << elapsed << endl;
 
 }
 
@@ -268,8 +268,8 @@ void gpuDetectObjs(cv::Mat_<int> img, HaarCascade& haar_cascade) {
 	int *dev_ii;
 	int *dev_ii2;
 	HaarCascade *dev_haar_cascade;
-//	cout << "Subwindows count: " << subwindows.size() << endl;
-//	cout << "Image size = " << img_width << " x " << img_height << endl;
+	cout << "Subwindows count: " << subwindows.size() << endl;
+	cout << "Image size = " << img_width << " x " << img_height << endl;
 
 	gpuComputeII(img.ptr<int>(), &dev_ii, &dev_ii2, img_height, img_width);
 //	ComputeIIs(img.ptr<int>(), ii, ii2, img_width, img_height);
@@ -299,7 +299,7 @@ void gpuDetectObjs(cv::Mat_<int> img, HaarCascade& haar_cascade) {
 
 	float elapsed;
 	cudaEventElapsedTime(&elapsed, start, stop);
-//	cout << "Total elapsed: " << elapsed << endl;
+	cout << "Total elapsed: " << elapsed << endl;
 
 	cudaMemcpy((void *)&num_objs, (void *)dev_num_objs, sizeof(float), cudaMemcpyDeviceToHost);
 
