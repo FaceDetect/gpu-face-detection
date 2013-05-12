@@ -118,7 +118,7 @@ void ObjectRecognizer::UnloadImage() {
 }
 
 void ObjectRecognizer::ComputeIntegralImages() {
-	ComputeIIs(grayscaled_bytes, ii, ii2, pic_width);
+	ComputeIIs(grayscaled_bytes, ii, ii2, pic_width, pic_height);
 }
 
 bool ObjectRecognizer::StagesPass(int x, int y, double scale, double inv, double std_dev) {

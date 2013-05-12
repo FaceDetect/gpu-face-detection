@@ -30,7 +30,7 @@ inline void SetMatrVal(T *arr, int row, int col, T val, int width) {
 std::vector<std::string> &Split(const std::string &s, char delim, std::vector<std::string> &elems);
 std::vector<std::string> Split(const std::string &s, char delim);
 void ReadWholeFile(const char *path, char **out_content);
-void ComputeIIs(const int *input, int *ii, int *ii2, int img_width);
+void ComputeIIs(const int *input, int *ii, int *ii2, int img_width, int img_height);
 
 
 void LoadCascade(const char *path, HaarCascade& haar_cascade);

@@ -17,8 +17,7 @@
 #include <algorithm>
 
 using namespace std;
-#define HANDLE_ERROR(X) X
-#define MAX_THREAD 320
+#define MAX_THREAD 200
 
 __device__ inline int MatrVal(int *arr, int row, int col, int pic_width) {
 
@@ -32,6 +31,79 @@ __device__ inline int RectSum(int* ii, int x, int y, int w, int h, int ii_width)
 		   MatrVal(ii, y, x + w, ii_width) -
 		   MatrVal(ii, y + h, x, ii_width);
 }
+
+
+
+__global__ void kernel_ii_rows(int *matr, int *result, int *sq_result, int rows, int cols) {
+
+	int row = threadIdx.x + blockIdx.x * blockDim.x;
+
+	int img_start_offset = row * cols;
+	int ii_start_offset = (row + 1) * (cols + 1) + 1;
+
+	int val;
+	int i;
+	int cur_sum = 0, cur_sq_sum = 0;
+
+	if (row < rows) {
+
+		for (i = 0; i < cols; i++) {
+			val = matr[img_start_offset + i];
+			cur_sum += val;
+			cur_sq_sum += (val * val);
+
+			result[ii_start_offset + i] = cur_sum;
+			sq_result[ii_start_offset + i] = cur_sq_sum;
+		}
+	}
+}
+
+__global__ void kernel_ii_cols(int *result, int *sq_result, int rows, int cols) {
+
+	int col = threadIdx.x + blockIdx.x * blockDim.x;
+	int i;
+	int ii_start_offset = (cols + 1) + col + 1;
+	if (col < cols) {
+		for (i = 1; i < rows; i++) {
+			//MatrVal(result, i, col, cols + 1) += MatrVal(result, i - 1, col, cols + 1);
+			//MatrVal(sq_result, i, col, cols + 1) += MatrVal(sq_result, i - 1, col, cols + 1);
+			result[ii_start_offset + i * (cols + 1)] += result[ii_start_offset + (i - 1) * (cols + 1)];
+			sq_result[ii_start_offset + i * (cols + 1)] += sq_result[ii_start_offset + (i - 1) * (cols + 1)];
+
+		}
+	}
+}
+
+
+void gpuComputeII(const int *matr, int **dev_result, int **dev_sq_result, int rows, int cols) {
+	int *dev_matr;
+	HANDLE_ERROR(cudaMalloc((void **)&dev_matr, rows * cols * sizeof(int)));
+	HANDLE_ERROR(cudaMalloc((void **)dev_result, (rows + 1) * (cols + 1) * sizeof(int)));
+	HANDLE_ERROR(cudaMalloc((void **)dev_sq_result, (rows + 1) * (cols + 1) * sizeof(int)));
+	HANDLE_ERROR(cudaMemset((void *)(*dev_result), 0, (rows + 1) * (cols + 1) * sizeof(int)));
+	HANDLE_ERROR(cudaMemset((void *)(*dev_sq_result), 0, (rows + 1) * (cols + 1) * sizeof(int)));
+	HANDLE_ERROR(cudaMemcpy((void *)dev_matr, (void *)matr, rows * cols * sizeof(int), cudaMemcpyHostToDevice));
+
+	dim3 block(512);
+	dim3 grid_rows(ceil(rows / 512.0));
+	dim3 grid_cols(ceil(cols / 512.0));
+
+	kernel_ii_rows<<<grid_rows, block>>>(dev_matr, *dev_result, *dev_sq_result, rows, cols);
+	kernel_ii_cols<<<grid_cols, block>>>(*dev_result, *dev_sq_result, rows, cols);
+
+//	HANDLE_ERROR(cudaMemcpy((void *)result, (void *)dev_result, cols * rows * sizeof(int), cudaMemcpyDeviceToHost));
+//	HANDLE_ERROR(cudaMemcpy((void *)sq_result, (void *)dev_sq_result, cols * rows * sizeof(int), cudaMemcpyDeviceToHost));
+
+	HANDLE_ERROR(cudaFree(dev_matr));
+//	HANDLE_ERROR(cudaFree(dev_result));
+}
+
+
+
+
+
+
+
 
 __global__ void kernel_detect_objs(int num_stage,
 								   int *ii,
@@ -171,20 +243,20 @@ void detectAtSubwindows(int *dev_ii, int *dev_ii2,
 		HANDLE_ERROR(cudaFree(dev_subwindows));
 	}
 
-	cout << "Kernel elapsed: " << elapsed << endl;
+//	cout << "Kernel elapsed: " << elapsed << endl;
 
 }
 
 
 void gpuDetectObjs(cv::Mat_<int> img, HaarCascade& haar_cascade) {
-	int img_width = img.rows;
-	int img_height = img.cols;
+	int img_width = img.cols;
+	int img_height = img.rows;
 //	int img_size = img_height * img_width;
-	int ii_size = (img_height + 1) * (img_width + 1);
-
-
-	int *ii = new int[ii_size];
-	int *ii2 = new int[ii_size];
+//	int ii_size = (img_height + 1) * (img_width + 1);
+//
+//
+//	int *ii = new int[ii_size];
+//	int *ii2 = new int[ii_size];
 
 
 	vector<SubWindow> subwindows;
@@ -199,15 +271,16 @@ void gpuDetectObjs(cv::Mat_<int> img, HaarCascade& haar_cascade) {
 //	cout << "Subwindows count: " << subwindows.size() << endl;
 //	cout << "Image size = " << img_width << " x " << img_height << endl;
 
-	ComputeIIs(img.ptr<int>(), ii, ii2, img_width);
+	gpuComputeII(img.ptr<int>(), &dev_ii, &dev_ii2, img_height, img_width);
+//	ComputeIIs(img.ptr<int>(), ii, ii2, img_width, img_height);
 
 	HANDLE_ERROR(cudaMalloc((void **)&dev_haar_cascade, sizeof(haar_cascade)));
 	HANDLE_ERROR(cudaMemcpy((void *)dev_haar_cascade, (void *)&haar_cascade, sizeof(haar_cascade), cudaMemcpyHostToDevice));
 
-	HANDLE_ERROR(cudaMalloc((void **)&dev_ii, sizeof(int) * ii_size));
-	HANDLE_ERROR(cudaMalloc((void **)&dev_ii2, sizeof(int) * ii_size));
-	HANDLE_ERROR(cudaMemcpy((void *)dev_ii, (void *)ii, sizeof(int) * ii_size, cudaMemcpyHostToDevice));
-	HANDLE_ERROR(cudaMemcpy((void *)dev_ii2, (void *)ii2, sizeof(int) * ii_size, cudaMemcpyHostToDevice));
+//	HANDLE_ERROR(cudaMalloc((void **)&dev_ii, sizeof(int) * ii_size));
+//	HANDLE_ERROR(cudaMalloc((void **)&dev_ii2, sizeof(int) * ii_size));
+//	HANDLE_ERROR(cudaMemcpy((void *)dev_ii, (void *)ii, sizeof(int) * ii_size, cudaMemcpyHostToDevice));
+//	HANDLE_ERROR(cudaMemcpy((void *)dev_ii2, (void *)ii2, sizeof(int) * ii_size, cudaMemcpyHostToDevice));
 
 
 	HANDLE_ERROR(cudaMalloc((void **)&dev_num_objs, sizeof(float)));
@@ -226,7 +299,7 @@ void gpuDetectObjs(cv::Mat_<int> img, HaarCascade& haar_cascade) {
 
 	float elapsed;
 	cudaEventElapsedTime(&elapsed, start, stop);
-	cout << "Total elapsed: " << elapsed << endl;
+//	cout << "Total elapsed: " << elapsed << endl;
 
 	cudaMemcpy((void *)&num_objs, (void *)dev_num_objs, sizeof(float), cudaMemcpyDeviceToHost);
 

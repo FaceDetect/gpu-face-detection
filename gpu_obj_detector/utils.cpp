@@ -8,6 +8,7 @@
 #include "utils.h"
 #include <stdio.h>
 #include <sstream>
+#include <iostream>
 #include <rapidxml.h>
 
 using namespace std;
@@ -120,11 +121,11 @@ void LoadStages(rapidxml::xml_node<>* stage, Stage *stages) {
 
 }
 
-void ComputeIIs(const int* input, int* ii, int* ii2, int img_width) {
+void ComputeIIs(const int* input, int* ii, int* ii2, int img_width, int img_height) {
 	//	gpuComputeII(grayscaled_bytes, ii, ii2, pic_height, pic_width);
-	for (int y = 1; y < img_width + 1; y++) {
+	for (int y = 1; y < img_height + 1; y++) {
 		for (int x = 1; x < img_width + 1; x++) {
-
+//			std::cout << x << " " << y << std::endl;
 			SetMatrVal(ii, y, x,
 					   MatrVal(input, y - 1, x - 1, img_width) -
 					   MatrVal(ii, y - 1, x - 1, img_width + 1) +
