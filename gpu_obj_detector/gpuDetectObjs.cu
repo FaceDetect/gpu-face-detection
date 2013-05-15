@@ -262,6 +262,10 @@ void gpuDetectObjs(cv::Mat_<int> img, HaarCascade& haar_cascade) {
 	vector<SubWindow> subwindows;
 	PrecalcSubwindows(img_width, img_height, subwindows, haar_cascade);
 
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+	cudaEventRecord(start, 0);
 
 	float num_objs = 0;
 	float *dev_num_objs;
@@ -284,11 +288,6 @@ void gpuDetectObjs(cv::Mat_<int> img, HaarCascade& haar_cascade) {
 
 
 	HANDLE_ERROR(cudaMalloc((void **)&dev_num_objs, sizeof(float)));
-
-	cudaEvent_t start, stop;
-	cudaEventCreate(&start);
-	cudaEventCreate(&stop);
-	cudaEventRecord(start, 0);
 
 	detectAtSubwindows(dev_ii, dev_ii2, img_width, img_height, dev_haar_cascade, dev_num_objs, subwindows);
 

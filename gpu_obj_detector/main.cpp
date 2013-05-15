@@ -24,8 +24,8 @@ int main(int argv, char **args)
 
 
 	HaarCascade haar_cascade;
-	std::cout << "../../data/judybats.jpg" << " ";
-	Mat_<int> img = imread("../../data/judybats.jpg", CV_LOAD_IMAGE_GRAYSCALE);
+	std::cout << "../../data/lena.jpg" << " ";
+	Mat_<int> img = imread("../../data/lena.jpg", CV_LOAD_IMAGE_GRAYSCALE);
 
 	//imshow("test", img);
 

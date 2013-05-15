@@ -12,6 +12,9 @@ RM := rm -rf
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
+ifneq ($(strip $(CU_DEPS)),)
+-include $(CU_DEPS)
+endif
 ifneq ($(strip $(C++_DEPS)),)
 -include $(C++_DEPS)
 endif
@@ -37,20 +40,22 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: obj_detection_tests
+all: libgpu_obj_detection.so secondary-outputs
 
 # Tool invocations
-obj_detection_tests: $(OBJS) $(USER_OBJS)
+libgpu_obj_detection.so: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
-	@echo 'Invoking: GCC C++ Linker'
-	g++ -L"/home/olehp/diploma/gpu-face-detection/gpu_obj_detection/Debug" -o "obj_detection_tests" $(OBJS) $(USER_OBJS) $(LIBS)
+	@echo 'Invoking: NVCC Linker'
+	nvcc -shared -link -o  "libgpu_obj_detection.so" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(OBJS)$(C++_DEPS)$(C_DEPS)$(CC_DEPS)$(CPP_DEPS)$(EXECUTABLES)$(CXX_DEPS)$(C_UPPER_DEPS) obj_detection_tests
+	-$(RM) $(CU_DEPS)$(OBJS)$(C++_DEPS)$(C_DEPS)$(CC_DEPS)$(LIBRARIES)$(CPP_DEPS)$(CXX_DEPS)$(C_UPPER_DEPS) libgpu_obj_detection.so
 	-@echo ' '
+
+secondary-outputs: $(CUBINS)
 
 .PHONY: all clean dependents
 .SECONDARY:
