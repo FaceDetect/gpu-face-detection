@@ -155,38 +155,13 @@ __global__ void kernel_detect_objs(int num_stage,
 
 }
 
-
-void PrecalcSubwindows(int img_width, int img_height, vector<SubWindow>& subwindows, HaarCascade& haar_cascade) {
-
-	float scale = 1.0;
-
-	int width = haar_cascade.window_width;
-	int height = haar_cascade.window_height;
-
-	while (OR_MIN(width, height) <= OR_MIN(img_width, img_height)) {
-
-		int x_step = OR_MAX(1, OR_MIN(4, width / 10));
-		int y_step = OR_MAX(1, OR_MIN(4, height / 10));
-
-		for (int y = 0; y < img_height - height; y += y_step) {
-			for (int x = 0; x < img_width - width; x += x_step) {
-				subwindows.push_back(SubWindow(x, y, width, height, scale));
-			}
-		}
-
-		scale = scale * 1.2;
-		width = (int)(haar_cascade.window_width * scale);
-		height = (int)(haar_cascade.window_height * scale);
-	}
-}
-
 bool isNonObject(const SubWindow& s) {
 	return !s.is_object;
 }
 
 void detectAtSubwindows(int *dev_ii, int *dev_ii2,
 						int img_width, int img_height,
-						HaarCascade& haar_cascade,
+						const HaarCascade& haar_cascade,
 						float * dev_num_objs,
 						vector<SubWindow>& subwindows) {
 	float elapsed = 0;
@@ -235,16 +210,11 @@ void detectAtSubwindows(int *dev_ii, int *dev_ii2,
 }
 
 
-void gpuDetectObjs(cv::Mat_<int> img, HaarCascade& haar_cascade) {
+void gpuDetectObjs(cv::Mat_<int> img,
+				   const HaarCascade& haar_cascade,
+				   std::vector<SubWindow>& subwindows) {
 	int img_width = img.cols;
 	int img_height = img.rows;
-//	int img_size = img_height * img_width;
-//	int ii_size = (img_height + 1) * (img_width + 1);
-//
-//
-
-	vector<SubWindow> subwindows;
-	PrecalcSubwindows(img_width, img_height, subwindows, haar_cascade);
 
 	cudaEvent_t start, stop;
 	cudaEventCreate(&start);
@@ -277,11 +247,6 @@ void gpuDetectObjs(cv::Mat_<int> img, HaarCascade& haar_cascade) {
 
 //	cout << "Detected objs: " << num_objs << endl;
 
-
-	for (int i = 0; i < subwindows.size(); i++) {
-
-		cout << subwindows[i].x << " " << subwindows[i].y << " " << subwindows[i].w << " " << subwindows[i].h << " ";
-	}
 
 	HANDLE_ERROR(cudaFree(dev_ii));
 	HANDLE_ERROR(cudaFree(dev_ii2));

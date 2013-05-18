@@ -4,69 +4,95 @@
  *  Created on: Feb 15, 2013
  *      Author: olehp
  */
-
 #include <stdio.h>
 #include "ObjectRecognizer.h"
 #include <iostream>
-#include "utils.h"
 #include "gpuDetectObjs.h"
-#include "Stage.h"
+#include "SubWindow.h"
+#include "utils.h"
+
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
+
+#define WEB_CAM_WIDTH 640
+#define WEB_CAM_HEIGHT 480
+#define W_NAME "Detection"
 
 using namespace std;
 using namespace cv;
 
-//#define HANDLE_ERROR(x) x
-
+void DetectAndDisplay(Mat img, const HaarCascade& haar_cascade, vector<SubWindow> subwindows);
+void WebCamDetect(const HaarCascade& haar_cascade);
+void ImgDetect(const HaarCascade& haar_cascade, const char *img_path);
 
 int main(int argv, char **args)
 {
-//	cout << "sizeof(Stage): " << sizeof(Stage) << endl;
-
-
 	HaarCascade haar_cascade;
-	std::cout << "../../data/lena.jpg" << " ";
-	Mat_<int> img = imread("../../data/lena.jpg", CV_LOAD_IMAGE_GRAYSCALE);
-
 	LoadCascade("../../data/haarcascade_frontalface_alt.xml", haar_cascade);
 
-	gpuDetectObjs(img, haar_cascade);
+	ImgDetect(haar_cascade, "../../data/judybats.jpg");
+//	WebCamDetect(haar_cascade);
+
+	waitKey();
+	return 0;
+
+}
+
+void ImgDetect(const HaarCascade& haar_cascade, const char *img_path) {
+	Mat img = imread(img_path);
+
+	if (img.empty()) {
+		cerr << "Image " << img_path << " not found" << endl;
+		return;
+	}
+
+	vector<SubWindow> subwindows;
+	PrecalcSubwindows(img.cols, img.rows, haar_cascade.window_width, haar_cascade.window_height, subwindows);
+
+	DetectAndDisplay(img, haar_cascade, subwindows);
+}
 
 
+void WebCamDetect(const HaarCascade& haar_cascade) {
+	CvCapture *capture;
 
-//	Mat_<int> test(3, 3);
-//
-//	for (int i = 0; i < 3; i++) {
-//		for (int j = 0; j < 3; j++) {
-//			test(i, j) = i + 2 * (j + 1);
-//			cout << test(i, j) << "\t";
-//		}
-//		cout << endl;
-//	}
-//
-//	int *dev_ii;
-//	int *dev_ii2;
-//	int *ii = new int[4 * 4];
-//	gpuComputeII(test.ptr<int>(), &dev_ii, &dev_ii2, 3, 3);
-//
-//	cudaMemcpy(ii, dev_ii, sizeof(int) * 4 * 4, cudaMemcpyDeviceToHost);
-//
-//	Mat_<int> res(4, 4, ii);
-//
-//	cout << endl;
-//	for (int i = 0; i < 4; i++) {
-//		for (int j = 0; j < 4; j++) {
-//			cout << res(i, j) << "\t";
-//		}
-//		cout << endl;
-//	}
+	capture = cvCaptureFromCAM(-1);
+	cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH, WEB_CAM_WIDTH);
+	cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT, WEB_CAM_HEIGHT);
 
+	if (capture) {
 
+		vector<SubWindow> subwindows;
+		PrecalcSubwindows(WEB_CAM_WIDTH, WEB_CAM_HEIGHT, haar_cascade.window_width, haar_cascade.window_height, subwindows);
 
-//	ObjectRecognizer obj_rec;
-//	std::cout << "../../data/lena.jpg" << " ";
-//	obj_rec.LoadHaarCascade("../../data/haarcascade_frontalface_alt.xml");
-//	obj_rec.LoadImage("../../data/lena.jpg");
-//	obj_rec.Recognize();
-//	obj_rec.UnloadImage();
+		Mat frame;
 
+		while (true) {
+			vector<SubWindow> objs = subwindows;
+
+			frame = cvQueryFrame(capture);
+			if (!frame.empty()) {
+				DetectAndDisplay(frame, haar_cascade, objs);
+			} else {
+				cerr << "No frame" << endl;
+				break;
+			}
+			int c = waitKey(10);
+			if ((char)c == 'c') break;
+		}
+	}
+}
+
+void DetectAndDisplay(Mat img, const HaarCascade& haar_cascade, vector<SubWindow> subwindows) {
+	Mat gray_img;
+	cvtColor(img, gray_img, CV_BGR2GRAY);
+	equalizeHist(gray_img, gray_img);
+	gpuDetectObjs((Mat_<int>) gray_img, haar_cascade, subwindows);
+	for (int i = 0; i < subwindows.size(); i++) {
+		Point p1(subwindows[i].x, subwindows[i].y);
+		Point p2(subwindows[i].x + subwindows[i].w, subwindows[i].y + subwindows[i].h);
+		rectangle(img, p1, p2, Scalar(255, 0, 255));
+	}
+	imshow(W_NAME, img);
 }

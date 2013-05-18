@@ -10,8 +10,11 @@
 
 #include <opencv2/opencv.hpp>
 #include "HaarCascade.h"
+#include "SubWindow.h"
 
-void gpuDetectObjs(cv::Mat_<int> img, HaarCascade& haar_cascade);
+void gpuDetectObjs(cv::Mat_<int> img,
+				   const HaarCascade& haar_cascade,
+				   std::vector<SubWindow>& objs);
 bool gpuDetectObjsAt(int *ii,
 					 int *ii2,
 					 float scale,

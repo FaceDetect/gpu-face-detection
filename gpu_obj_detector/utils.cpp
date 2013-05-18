@@ -14,6 +14,31 @@
 using namespace std;
 using namespace rapidxml;
 
+void PrecalcSubwindows(int img_width, int img_height, int start_width, int start_height, vector<SubWindow>& subwindows) {
+
+	float scale = 1.0;
+
+	int width = start_width;
+	int height = start_height;
+
+	while (OR_MIN(width, height) <= OR_MIN(img_width, img_height)) {
+
+		int x_step = OR_MAX(1, OR_MIN(4, width / 10));
+		int y_step = OR_MAX(1, OR_MIN(4, height / 10));
+
+		for (int y = 0; y < img_height - height; y += y_step) {
+			for (int x = 0; x < img_width - width; x += x_step) {
+				subwindows.push_back(SubWindow(x, y, width, height, scale));
+			}
+		}
+
+		scale = scale * 1.2;
+		width = (int)(start_width * scale);
+		height = (int)(start_height * scale);
+	}
+}
+
+
 void ReadWholeFile(const char *path, char **out_content) {
 	FILE *f;
 	long file_size;
