@@ -10,13 +10,14 @@
 #include "gpuDetectObjs.h"
 #include "SubWindow.h"
 #include "utils.h"
+#include "time.h"
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
 
-#define WEB_CAM_WIDTH 640
-#define WEB_CAM_HEIGHT 480
+#define WEB_CAM_WIDTH 320
+#define WEB_CAM_HEIGHT 280
 #define W_NAME "Detection"
 
 using namespace std;
@@ -31,10 +32,11 @@ int main(int argv, char **args)
 	HaarCascade haar_cascade;
 	LoadCascade("../../data/haarcascade_frontalface_alt.xml", haar_cascade);
 
-	ImgDetect(haar_cascade, "../../data/judybats.jpg");
+	ImgDetect(haar_cascade, "../../data/hr.jpg");
 //	WebCamDetect(haar_cascade);
 
 	waitKey();
+	cvDestroyWindow(W_NAME);
 	return 0;
 
 }
@@ -72,12 +74,27 @@ void WebCamDetect(const HaarCascade& haar_cascade) {
 
 	Mat frame;
 
+	int frames = 0;
+	float sec, fps;
+	time_t start, end;
+	time(&start);
+
 	while (true) {
 		vector<SubWindow> objs = subwindows;
 
 		frame = cvQueryFrame(capture);
 		if (!frame.empty()) {
 			DetectAndDisplay(frame, haar_cascade, objs);
+
+
+			time(&end);
+			frames++;
+			sec = difftime(end, start);
+			fps = frames / sec;
+
+			cout << "FPS: " << fps << endl;
+
+
 		} else {
 			cerr << "No frame" << endl;
 			break;
@@ -85,6 +102,8 @@ void WebCamDetect(const HaarCascade& haar_cascade) {
 		int c = waitKey(10);
 		if ((char)c == 'c') break;
 	}
+
+	cvReleaseCapture(&capture);
 
 }
 
@@ -99,4 +118,5 @@ void DetectAndDisplay(Mat& img, const HaarCascade& haar_cascade, vector<SubWindo
 		rectangle(img, p1, p2, Scalar(0, 0, 255));
 	}
 	imshow(W_NAME, img);
+	//imwrite("out.jpg", img);
 }

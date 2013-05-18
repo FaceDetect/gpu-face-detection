@@ -23,8 +23,8 @@ void PrecalcSubwindows(int img_width, int img_height, int start_width, int start
 
 	while (OR_MIN(width, height) <= OR_MIN(img_width, img_height)) {
 
-		int x_step = OR_MAX(1, OR_MIN(4, width / 10));
-		int y_step = OR_MAX(1, OR_MIN(4, height / 10));
+		int x_step = 5;//OR_MAX(1, OR_MIN(4, width / 10));
+		int y_step = 5;//OR_MAX(1, OR_MIN(4, height / 10));
 
 		for (int y = 0; y < img_height - height; y += y_step) {
 			for (int x = 0; x < img_width - width; x += x_step) {
