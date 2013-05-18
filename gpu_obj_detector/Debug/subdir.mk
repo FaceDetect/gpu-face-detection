@@ -33,16 +33,16 @@ CPP_DEPS += \
 %.o: ../%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: NVCC Compiler'
-	nvcc -I/home/olehp/diploma/gpu-face-detection/gpu_routines -include /usr/local/include/undef_atomics_int128.h -O3 -gencode arch=compute_11,code=sm_11 -odir "" -M -o "$(@:%.o=%.d)" "$<"
-	nvcc -I/home/olehp/diploma/gpu-face-detection/gpu_routines -include /usr/local/include/undef_atomics_int128.h -O3 --compile  -x c++ -o  "$@" "$<"
+	nvcc -I/home/olehp/diploma/gpu-face-detection/gpu_routines -include /usr/local/include/undef_atomics_int128.h -O3 -m32 -gencode arch=compute_11,code=sm_11 -odir "" -M -o "$(@:%.o=%.d)" "$<"
+	nvcc -I/home/olehp/diploma/gpu-face-detection/gpu_routines -include /usr/local/include/undef_atomics_int128.h -O3 -m32 --compile  -x c++ -o  "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
 %.o: ../%.cu
 	@echo 'Building file: $<'
 	@echo 'Invoking: NVCC Compiler'
-	nvcc -I/home/olehp/diploma/gpu-face-detection/gpu_routines -include /usr/local/include/undef_atomics_int128.h -O3 -gencode arch=compute_11,code=sm_11 -odir "" -M -o "$(@:%.o=%.d)" "$<"
-	nvcc --compile -I/home/olehp/diploma/gpu-face-detection/gpu_routines -O3 -gencode arch=compute_11,code=compute_11 -gencode arch=compute_11,code=sm_11 -include /usr/local/include/undef_atomics_int128.h  -x cu -o  "$@" "$<"
+	nvcc -I/home/olehp/diploma/gpu-face-detection/gpu_routines -include /usr/local/include/undef_atomics_int128.h -O3 -m32 -gencode arch=compute_11,code=sm_11 -odir "" -M -o "$(@:%.o=%.d)" "$<"
+	nvcc --compile -I/home/olehp/diploma/gpu-face-detection/gpu_routines -O3 -gencode arch=compute_11,code=compute_11 -gencode arch=compute_11,code=sm_11 -include /usr/local/include/undef_atomics_int128.h -m32  -x cu -o  "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

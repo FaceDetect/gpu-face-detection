@@ -22,7 +22,7 @@
 using namespace std;
 using namespace cv;
 
-void DetectAndDisplay(Mat img, const HaarCascade& haar_cascade, vector<SubWindow> subwindows);
+void DetectAndDisplay(Mat& img, const HaarCascade& haar_cascade, vector<SubWindow> subwindows);
 void WebCamDetect(const HaarCascade& haar_cascade);
 void ImgDetect(const HaarCascade& haar_cascade, const char *img_path);
 
@@ -31,7 +31,7 @@ int main(int argv, char **args)
 	HaarCascade haar_cascade;
 	LoadCascade("../../data/haarcascade_frontalface_alt.xml", haar_cascade);
 
-	ImgDetect(haar_cascade, "../../data/lena.jpg");
+	ImgDetect(haar_cascade, "../../data/judybats.jpg");
 //	WebCamDetect(haar_cascade);
 
 	waitKey();
@@ -58,33 +58,37 @@ void WebCamDetect(const HaarCascade& haar_cascade) {
 	CvCapture *capture;
 
 	capture = cvCaptureFromCAM(-1);
+	if (!capture) {
+		cerr << "No webcam found." << endl;
+		return;
+	}
+
 	cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH, WEB_CAM_WIDTH);
 	cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT, WEB_CAM_HEIGHT);
 
-	if (capture) {
 
-		vector<SubWindow> subwindows;
-		PrecalcSubwindows(WEB_CAM_WIDTH, WEB_CAM_HEIGHT, haar_cascade.window_width, haar_cascade.window_height, subwindows);
+	vector<SubWindow> subwindows;
+	PrecalcSubwindows(WEB_CAM_WIDTH, WEB_CAM_HEIGHT, haar_cascade.window_width, haar_cascade.window_height, subwindows);
 
-		Mat frame;
+	Mat frame;
 
-		while (true) {
-			vector<SubWindow> objs = subwindows;
+	while (true) {
+		vector<SubWindow> objs = subwindows;
 
-			frame = cvQueryFrame(capture);
-			if (!frame.empty()) {
-				DetectAndDisplay(frame, haar_cascade, objs);
-			} else {
-				cerr << "No frame" << endl;
-				break;
-			}
-			int c = waitKey(10);
-			if ((char)c == 'c') break;
+		frame = cvQueryFrame(capture);
+		if (!frame.empty()) {
+			DetectAndDisplay(frame, haar_cascade, objs);
+		} else {
+			cerr << "No frame" << endl;
+			break;
 		}
+		int c = waitKey(10);
+		if ((char)c == 'c') break;
 	}
+
 }
 
-void DetectAndDisplay(Mat img, const HaarCascade& haar_cascade, vector<SubWindow> subwindows) {
+void DetectAndDisplay(Mat& img, const HaarCascade& haar_cascade, vector<SubWindow> subwindows) {
 	Mat gray_img;
 	cvtColor(img, gray_img, CV_BGR2GRAY);
 	equalizeHist(gray_img, gray_img);

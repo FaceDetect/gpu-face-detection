@@ -19,7 +19,7 @@
 
 #define OR_DBG 1
 #define DBG_WRP(e) \
-	if (OR_DBG == 1) \
+	if (OR_DBG) \
 		( e ) \
 
 

@@ -17,7 +17,7 @@
 #include <algorithm>
 
 using namespace std;
-#define MAX_THREAD 320
+#define MAX_THREAD 416
 
 
 __constant__ __align__(4) char c_stage[sizeof(Stage)];
@@ -197,6 +197,7 @@ void detectAtSubwindows(int *dev_ii, int *dev_ii2,
 
 		elapsed += tmp_elapsed;
 		DBG_WRP(cout << "Elapsed by stage " << tmp_elapsed << endl);
+
 		HANDLE_ERROR(cudaMemcpy((void *)&subwindows[0], (void *)dev_subwindows, sizeof(SubWindow) * num_subwindows, cudaMemcpyDeviceToHost));
 
 		subwindows.erase(remove_if(subwindows.begin(), subwindows.end(), isNonObject), subwindows.end());
@@ -234,7 +235,7 @@ void gpuDetectObjs(cv::Mat_<int> img,
 
 	detectAtSubwindows(dev_ii, dev_ii2, img_width, img_height, haar_cascade, dev_num_objs, subwindows);
 
-	HANDLE_ERROR(cudaDeviceSynchronize());
+//	HANDLE_ERROR(cudaDeviceSynchronize());
 
 	cudaEventRecord(stop, 0);
 	cudaEventSynchronize(stop);

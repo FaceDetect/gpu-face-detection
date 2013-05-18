@@ -38,6 +38,8 @@
 								</option>
 								<option id="nvcc.compiler.option.lineinfo.2082961031" name="Generate line-number information for device code (-lineinfo)" superClass="nvcc.compiler.option.lineinfo" value="false" valueType="boolean"/>
 								<option id="nvcc.compiler.option.gprof.623480952" name="Generate gprof information (-pg)" superClass="nvcc.compiler.option.gprof" value="false" valueType="boolean"/>
+								<option id="nvcc.compiler.machine.792564331" name="Architecture (--machine)" superClass="nvcc.compiler.machine" value="nvcc.compiler.machine32" valueType="enumerated"/>
+								<option id="nvcc.compiler.dontuseprofile.1125886351" name="Do not use profile (-noprof)" superClass="nvcc.compiler.dontuseprofile" value="false" valueType="boolean"/>
 								<inputType id="nvcc.compiler.input.cu.781447923" superClass="nvcc.compiler.input.cu"/>
 								<inputType id="nvcc.compiler.input.cpp.1818338201" superClass="nvcc.compiler.input.cpp"/>
 								<inputType id="nvcc.compiler.input.c.1321699512" superClass="nvcc.compiler.input.c"/>
@@ -51,6 +53,7 @@
 								<option id="nvcc.linker.option.paths.1666017915" name="Library search path (-L)" superClass="nvcc.linker.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="/home/olehp/diploma/gpu-face-detection/gpu_routines/Debug"/>
 								</option>
+								<option id="nvcc.linker.option.shared.1344314726" name="Shared (-shared)" superClass="nvcc.linker.option.shared" value="false" valueType="boolean"/>
 								<inputType id="nvcc.linker.input.1967103996" superClass="nvcc.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
