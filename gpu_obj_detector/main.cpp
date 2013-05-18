@@ -31,7 +31,7 @@ int main(int argv, char **args)
 	HaarCascade haar_cascade;
 	LoadCascade("../../data/haarcascade_frontalface_alt.xml", haar_cascade);
 
-	ImgDetect(haar_cascade, "../../data/judybats.jpg");
+	ImgDetect(haar_cascade, "../../data/lena.jpg");
 //	WebCamDetect(haar_cascade);
 
 	waitKey();
@@ -92,7 +92,7 @@ void DetectAndDisplay(Mat img, const HaarCascade& haar_cascade, vector<SubWindow
 	for (int i = 0; i < subwindows.size(); i++) {
 		Point p1(subwindows[i].x, subwindows[i].y);
 		Point p2(subwindows[i].x + subwindows[i].w, subwindows[i].y + subwindows[i].h);
-		rectangle(img, p1, p2, Scalar(255, 0, 255));
+		rectangle(img, p1, p2, Scalar(0, 0, 255));
 	}
 	imshow(W_NAME, img);
 }

@@ -17,6 +17,14 @@
 #define OR_MIN(a,b) (( a ) < ( b ) ? ( a ) : ( b ))
 #define OR_SQR(a) (( a ) * ( a ))
 
+#define OR_DBG 1
+#define DBG_WRP(e) \
+	if (OR_DBG == 1) \
+		( e ) \
+
+
+
+
 template<typename T>
 inline T MatrVal(T *arr, int row, int col, int width) {
 

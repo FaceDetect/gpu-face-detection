@@ -196,16 +196,16 @@ void detectAtSubwindows(int *dev_ii, int *dev_ii2,
 		cudaEventElapsedTime(&tmp_elapsed, start, stop);
 
 		elapsed += tmp_elapsed;
-		cout << "Elapsed by stage " << tmp_elapsed << endl;
+		DBG_WRP(cout << "Elapsed by stage " << tmp_elapsed << endl);
 		HANDLE_ERROR(cudaMemcpy((void *)&subwindows[0], (void *)dev_subwindows, sizeof(SubWindow) * num_subwindows, cudaMemcpyDeviceToHost));
 
 		subwindows.erase(remove_if(subwindows.begin(), subwindows.end(), isNonObject), subwindows.end());
-		cout << "Subwindows after stage " << i << " : " << subwindows.size() << endl << endl;
+		DBG_WRP(cout << "Subwindows after stage " << i << " : " << subwindows.size() << endl << endl);
 		
 		HANDLE_ERROR(cudaFree(dev_subwindows));
 	}
 
-	cout << "Kernel elapsed: " << elapsed << endl;
+	DBG_WRP(cout << "Kernel elapsed: " << elapsed << endl);
 
 }
 
@@ -225,8 +225,8 @@ void gpuDetectObjs(cv::Mat_<int> img,
 	float *dev_num_objs;
 	int *dev_ii;
 	int *dev_ii2;
-	cout << "Subwindows count: " << subwindows.size() << endl;
-	cout << "Image size = " << img_width << " x " << img_height << endl;
+	DBG_WRP(cout << "Subwindows count: " << subwindows.size() << endl);
+	DBG_WRP(cout << "Image size = " << img_width << " x " << img_height << endl);
 
 	gpuComputeII(img.ptr<int>(), &dev_ii, &dev_ii2, img_height, img_width);
 
@@ -241,7 +241,7 @@ void gpuDetectObjs(cv::Mat_<int> img,
 
 	float elapsed;
 	cudaEventElapsedTime(&elapsed, start, stop);
-	cout << "Total elapsed: " << elapsed << endl;
+	DBG_WRP(cout << "Total elapsed: " << elapsed << endl);
 
 	cudaMemcpy((void *)&num_objs, (void *)dev_num_objs, sizeof(float), cudaMemcpyDeviceToHost);
 
@@ -251,9 +251,6 @@ void gpuDetectObjs(cv::Mat_<int> img,
 	HANDLE_ERROR(cudaFree(dev_ii));
 	HANDLE_ERROR(cudaFree(dev_ii2));
 	HANDLE_ERROR(cudaFree(dev_num_objs));
-
-//	cout << "After gpuDetectObjs" << endl;
-
 }
 
 
