@@ -27,13 +27,11 @@ int main(int argv, char **args)
 	std::cout << "../../data/lena.jpg" << " ";
 	Mat_<int> img = imread("../../data/lena.jpg", CV_LOAD_IMAGE_GRAYSCALE);
 
-	//imshow("test", img);
-
-
-
 	LoadCascade("../../data/haarcascade_frontalface_alt.xml", haar_cascade);
 
 	gpuDetectObjs(img, haar_cascade);
+
+
 
 //	Mat_<int> test(3, 3);
 //
@@ -65,9 +63,9 @@ int main(int argv, char **args)
 
 
 //	ObjectRecognizer obj_rec;
-//	std::cout << "../../data/judybats.jpg" << " ";
+//	std::cout << "../../data/lena.jpg" << " ";
 //	obj_rec.LoadHaarCascade("../../data/haarcascade_frontalface_alt.xml");
-//	obj_rec.LoadImage("../../data/judybats.jpg");
+//	obj_rec.LoadImage("../../data/lena.jpg");
 //	obj_rec.Recognize();
 //	obj_rec.UnloadImage();
 

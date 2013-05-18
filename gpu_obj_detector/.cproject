@@ -36,7 +36,7 @@
 								<option id="nvcc.compiler.include.files.766140993" name="Include files (-include)" superClass="nvcc.compiler.include.files" valueType="includeFiles">
 									<listOptionValue builtIn="false" value="/usr/local/include/undef_atomics_int128.h"/>
 								</option>
-								<option id="nvcc.compiler.option.lineinfo.2082961031" name="Generate line-number information for device code (-lineinfo)" superClass="nvcc.compiler.option.lineinfo" value="true" valueType="boolean"/>
+								<option id="nvcc.compiler.option.lineinfo.2082961031" name="Generate line-number information for device code (-lineinfo)" superClass="nvcc.compiler.option.lineinfo" value="false" valueType="boolean"/>
 								<option id="nvcc.compiler.option.gprof.623480952" name="Generate gprof information (-pg)" superClass="nvcc.compiler.option.gprof" value="true" valueType="boolean"/>
 								<inputType id="nvcc.compiler.input.cu.781447923" superClass="nvcc.compiler.input.cu"/>
 								<inputType id="nvcc.compiler.input.cpp.1818338201" superClass="nvcc.compiler.input.cpp"/>

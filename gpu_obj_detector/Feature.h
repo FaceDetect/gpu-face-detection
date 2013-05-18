@@ -14,7 +14,7 @@
 
 struct Feature {
 	Rectangle rects[HAAR_MAX_RECTS];
-	float tilted;
+//	float tilted;
 };
 
 

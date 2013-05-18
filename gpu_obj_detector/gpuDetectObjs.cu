@@ -19,6 +19,10 @@
 using namespace std;
 #define MAX_THREAD 320
 
+
+__constant__ __align__(4) char c_stage[sizeof(Stage)];
+
+
 __device__ inline int MatrVal(int *arr, int row, int col, int pic_width) {
 
 	return arr[row * pic_width + col];
@@ -65,8 +69,6 @@ __global__ void kernel_ii_cols(int *result, int *sq_result, int rows, int cols) 
 	int ii_start_offset = (cols + 1) + col + 1;
 	if (col < cols) {
 		for (i = 1; i < rows; i++) {
-			//MatrVal(result, i, col, cols + 1) += MatrVal(result, i - 1, col, cols + 1);
-			//MatrVal(sq_result, i, col, cols + 1) += MatrVal(sq_result, i - 1, col, cols + 1);
 			result[ii_start_offset + i * (cols + 1)] += result[ii_start_offset + (i - 1) * (cols + 1)];
 			sq_result[ii_start_offset + i * (cols + 1)] += sq_result[ii_start_offset + (i - 1) * (cols + 1)];
 
@@ -91,17 +93,8 @@ void gpuComputeII(const int *matr, int **dev_result, int **dev_sq_result, int ro
 	kernel_ii_rows<<<grid_rows, block>>>(dev_matr, *dev_result, *dev_sq_result, rows, cols);
 	kernel_ii_cols<<<grid_cols, block>>>(*dev_result, *dev_sq_result, rows, cols);
 
-//	HANDLE_ERROR(cudaMemcpy((void *)result, (void *)dev_result, cols * rows * sizeof(int), cudaMemcpyDeviceToHost));
-//	HANDLE_ERROR(cudaMemcpy((void *)sq_result, (void *)dev_sq_result, cols * rows * sizeof(int), cudaMemcpyDeviceToHost));
-
 	HANDLE_ERROR(cudaFree(dev_matr));
-//	HANDLE_ERROR(cudaFree(dev_result));
 }
-
-
-
-
-
 
 
 
@@ -110,17 +103,12 @@ __global__ void kernel_detect_objs(int num_stage,
 								   int *ii2,
 								   int ii_width,
 								   int ii_height,
-								   HaarCascade *haar_cascade,
 								   SubWindow *subwindows,
 								   int num_subwindows,
 								   float *num_objs) {
-//	*num_objs = 123;
 	// 244 216 123 123 6.19174
 
-//	*num_objs = 1;
-
 	int i_subwindow = threadIdx.x + blockIdx.x * blockDim.x;
-//	subwindows[i_subwindow].is_object = 0;
 
 	if (!(i_subwindow < num_subwindows)) return;
 
@@ -136,15 +124,15 @@ __global__ void kernel_detect_objs(int num_stage,
 
 	float std_dev = sqrt(variance);
 
-	Stage &stage = haar_cascade->stages[num_stage];
+	Stage &stage = (Stage&)c_stage;
 
-	float tree_sum = 0;//TreesPass(stage, x, y, scale, inv, std_dev);
+	float tree_sum = 0;
 
 	for (int j = 0; j < HAAR_MAX_TREES; j++) {
 		Tree& tree = stage.trees[j];
 		if (!tree.valid) break;
 
-		float rects_sum = 0;//RectsPass(tree, x, y, scale) * inv;
+		float rects_sum = 0;
 
 		for (int k = 0; k < HAAR_MAX_RECTS; k++) {
 			Rectangle &rect = tree.feature.rects[k];
@@ -198,7 +186,7 @@ bool isNonObject(const SubWindow& s) {
 
 void detectAtSubwindows(int *dev_ii, int *dev_ii2,
 						int img_width, int img_height,
-						HaarCascade *dev_haar_cascade,
+						HaarCascade& haar_cascade,
 						float * dev_num_objs,
 						vector<SubWindow>& subwindows) {
 	float elapsed = 0;
@@ -210,7 +198,7 @@ void detectAtSubwindows(int *dev_ii, int *dev_ii2,
 		SubWindow *dev_subwindows;
 		HANDLE_ERROR(cudaMalloc((void **)&dev_subwindows, sizeof(SubWindow) * num_subwindows));
 		HANDLE_ERROR(cudaMemcpy((void *)dev_subwindows, (void *)&subwindows[0], sizeof(SubWindow) * num_subwindows, cudaMemcpyHostToDevice));
-
+		HANDLE_ERROR(cudaMemcpyToSymbol(c_stage, &haar_cascade.stages[i], sizeof(Stage)));
 
 		cudaEvent_t start, stop;
 		cudaEventCreate(&start);
@@ -222,7 +210,6 @@ void detectAtSubwindows(int *dev_ii, int *dev_ii2,
 											dev_ii2,
 											img_width + 1,
 											img_height + 1,
-											dev_haar_cascade,
 											dev_subwindows,
 											subwindows.size(),
 											dev_num_objs);
@@ -234,7 +221,7 @@ void detectAtSubwindows(int *dev_ii, int *dev_ii2,
 		cudaEventElapsedTime(&tmp_elapsed, start, stop);
 
 		elapsed += tmp_elapsed;
-//		cout << "Elapsed by stage " << tmp_elapsed << endl;
+		cout << "Elapsed by stage " << tmp_elapsed << endl;
 		HANDLE_ERROR(cudaMemcpy((void *)&subwindows[0], (void *)dev_subwindows, sizeof(SubWindow) * num_subwindows, cudaMemcpyDeviceToHost));
 
 		subwindows.erase(remove_if(subwindows.begin(), subwindows.end(), isNonObject), subwindows.end());
@@ -255,9 +242,6 @@ void gpuDetectObjs(cv::Mat_<int> img, HaarCascade& haar_cascade) {
 //	int ii_size = (img_height + 1) * (img_width + 1);
 //
 //
-//	int *ii = new int[ii_size];
-//	int *ii2 = new int[ii_size];
-
 
 	vector<SubWindow> subwindows;
 	PrecalcSubwindows(img_width, img_height, subwindows, haar_cascade);
@@ -271,25 +255,14 @@ void gpuDetectObjs(cv::Mat_<int> img, HaarCascade& haar_cascade) {
 	float *dev_num_objs;
 	int *dev_ii;
 	int *dev_ii2;
-	HaarCascade *dev_haar_cascade;
 	cout << "Subwindows count: " << subwindows.size() << endl;
 	cout << "Image size = " << img_width << " x " << img_height << endl;
 
 	gpuComputeII(img.ptr<int>(), &dev_ii, &dev_ii2, img_height, img_width);
-//	ComputeIIs(img.ptr<int>(), ii, ii2, img_width, img_height);
-
-	HANDLE_ERROR(cudaMalloc((void **)&dev_haar_cascade, sizeof(haar_cascade)));
-	HANDLE_ERROR(cudaMemcpy((void *)dev_haar_cascade, (void *)&haar_cascade, sizeof(haar_cascade), cudaMemcpyHostToDevice));
-
-//	HANDLE_ERROR(cudaMalloc((void **)&dev_ii, sizeof(int) * ii_size));
-//	HANDLE_ERROR(cudaMalloc((void **)&dev_ii2, sizeof(int) * ii_size));
-//	HANDLE_ERROR(cudaMemcpy((void *)dev_ii, (void *)ii, sizeof(int) * ii_size, cudaMemcpyHostToDevice));
-//	HANDLE_ERROR(cudaMemcpy((void *)dev_ii2, (void *)ii2, sizeof(int) * ii_size, cudaMemcpyHostToDevice));
-
 
 	HANDLE_ERROR(cudaMalloc((void **)&dev_num_objs, sizeof(float)));
 
-	detectAtSubwindows(dev_ii, dev_ii2, img_width, img_height, dev_haar_cascade, dev_num_objs, subwindows);
+	detectAtSubwindows(dev_ii, dev_ii2, img_width, img_height, haar_cascade, dev_num_objs, subwindows);
 
 	HANDLE_ERROR(cudaDeviceSynchronize());
 
@@ -310,7 +283,6 @@ void gpuDetectObjs(cv::Mat_<int> img, HaarCascade& haar_cascade) {
 		cout << subwindows[i].x << " " << subwindows[i].y << " " << subwindows[i].w << " " << subwindows[i].h << " ";
 	}
 
-	HANDLE_ERROR(cudaFree(dev_haar_cascade));
 	HANDLE_ERROR(cudaFree(dev_ii));
 	HANDLE_ERROR(cudaFree(dev_ii2));
 	HANDLE_ERROR(cudaFree(dev_num_objs));

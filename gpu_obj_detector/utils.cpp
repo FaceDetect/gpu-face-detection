@@ -75,7 +75,7 @@ void LoadRects(rapidxml::xml_node<> *rect, Rectangle *rects) {
 
 void LoadFeature(rapidxml::xml_node<>* feature, Feature& f) {
 
-	f.tilted = atof(feature->first_node("tilted")->value());
+//	f.tilted = atof(feature->first_node("tilted")->value());
 
 	LoadRects(feature->first_node("rects")->first_node(), f.rects);
 }
