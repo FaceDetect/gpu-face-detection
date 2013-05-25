@@ -4,27 +4,33 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
-../ObjectRecognizer.cpp \
+../CpuObjDetector.cpp \
+../ObjDetector.cpp \
 ../main.cpp \
 ../utils.cpp 
 
 CU_SRCS += \
+../GpuObjDetector.cu \
 ../gpuDetectObjs.cu \
 ../gpu_utils.cu 
 
 CU_DEPS += \
+./GpuObjDetector.d \
 ./gpuDetectObjs.d \
 ./gpu_utils.d 
 
 OBJS += \
-./ObjectRecognizer.o \
+./CpuObjDetector.o \
+./GpuObjDetector.o \
+./ObjDetector.o \
 ./gpuDetectObjs.o \
 ./gpu_utils.o \
 ./main.o \
 ./utils.o 
 
 CPP_DEPS += \
-./ObjectRecognizer.d \
+./CpuObjDetector.d \
+./ObjDetector.d \
 ./main.d \
 ./utils.d 
 

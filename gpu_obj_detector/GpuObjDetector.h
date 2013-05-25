@@ -8,15 +8,13 @@
 #ifndef GPUOBJDETECTOR_H_
 #define GPUOBJDETECTOR_H_
 
-#include <vector>
-#include "SubWindow.h"
-#include "HaarCascade.h"
+#include "ObjDetector.h"
 
-class GpuObjDetector {
+class GpuObjDetector : public ObjDetector {
 public:
 	GpuObjDetector(int w, int h, HaarCascade& cascade);
-	void Detect(int *g_img, std::vector<SubWindow>& objs);
-	~GpuObjDetector();
+	virtual void Detect(int *g_img, std::vector<SubWindow>& objs);
+	virtual ~GpuObjDetector();
 private:
 	int *dev_img;
 	int *dev_ii;

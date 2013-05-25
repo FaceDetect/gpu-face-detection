@@ -12,18 +12,12 @@
 #include <iostream>
 #include <algorithm>
 
-#define MAX_THREAD 256
+#define MAX_THREAD 416
 
 using namespace std;
 
 
 __constant__ __align__(4) char stage_buf[sizeof(Stage)];
-
-
-__device__ inline int MatrVal(const int *arr, int row, int col, int pic_width) {
-
-	return arr[row * pic_width + col];
-}
 
 __device__ inline int RectSum(const int* ii, int x, int y, int w, int h, int ii_width) {
 
@@ -99,7 +93,7 @@ __global__ void kernel_detect_objs(int num_stage,
 
 	int i_subwindow = threadIdx.x + blockIdx.x * blockDim.x;
 
-	if (i_subwindow >= num_subwindows) return;
+	if (!(i_subwindow < num_subwindows)) return;
 
 	SubWindow s = subwindows[i_subwindow];
 	float scale = s.scale;
@@ -128,10 +122,10 @@ __global__ void kernel_detect_objs(int num_stage,
 			Rectangle &rect = tree.feature.rects[k];
 			if (rect.wg == 0) break;
 
-			rects_sum = rects_sum + RectSum(ii, x + (int)(rect.x * scale),
-												y + (int)(rect.y * scale),
-												(int)(rect.w * scale),
-												(int)(rect.h * scale), ii_width) * rect.wg;
+			rects_sum = rects_sum + RectSum(ii, x + (rect.x * scale),
+												y + (rect.y * scale),
+												(rect.w * scale),
+												(rect.h * scale), ii_width) * rect.wg;
 		}
 
 		tree_sum += ((rects_sum * inv < tree.threshold * std_dev) ? tree.left_val : tree.right_val);
@@ -148,18 +142,6 @@ __global__ void kernel_detect_objs(int num_stage,
 bool isNonObject(const SubWindow& s) {
 	return !s.is_object;
 }
-
-//void CompactSubwindows(SubWindow *dev_subwindows, uint *dev_indexes, uint num_subwindows) {
-//	CUDPPHandle plan, lib;
-//	cudppCreate(&lib);
-//
-//	CUDPPConfiguration config;
-//	config.op = CUDPP_ADD;
-//	config.datatype = CUDPP_INT;
-//	config.algorithm = CUDPP_SCAN;
-//	config.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE;
-//
-//}
 
 void DetectAtSubwindows(const int *dev_ii, const int *dev_ii2,
 						int img_width, int img_height,
@@ -182,7 +164,9 @@ void DetectAtSubwindows(const int *dev_ii, const int *dev_ii2,
 											img_width + 1,
 											img_height + 1,
 											dev_subwindows,
-											subwindows.size());
+											num_subwindows);
+
+//		cudaDeviceSynchronize();
 
 		HANDLE_ERROR(cudaMemcpy(&subwindows[0], dev_subwindows, sizeof(SubWindow) * num_subwindows, cudaMemcpyDeviceToHost));
 

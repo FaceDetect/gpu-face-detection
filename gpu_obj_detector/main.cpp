@@ -5,7 +5,7 @@
  *      Author: olehp
  */
 #include <stdio.h>
-#include "ObjectRecognizer.h"
+#include "CpuObjDetector.h"
 #include <iostream>
 #include "gpuDetectObjs.h"
 #include "SubWindow.h"
@@ -24,20 +24,21 @@
 using namespace std;
 using namespace cv;
 
-void DetectAndDisplay(Mat& img, GpuObjDetector& detector);
-void WebCamDetect(GpuObjDetector& detector);
-void ImgDetect(GpuObjDetector& detector, const char *img_path);
+void DetectAndDisplay(Mat& img, ObjDetector& detector);
+void WebCamDetect(ObjDetector& detector);
+void ImgDetect(ObjDetector& detector, const char *img_path);
 
 int main(int argv, char **args)
 {
 	HaarCascade haar_cascade;
 	LoadCascade("../../data/haarcascade_frontalface_alt.xml", haar_cascade);
 
-	GpuObjDetector detector(512, 512, haar_cascade);
+	GpuObjDetector detector(WEB_CAM_WIDTH, WEB_CAM_HEIGHT, haar_cascade);
+//	GpuObjDetector detector(512, 512, haar_cascade);
 
-	ImgDetect(detector, "../../data/lena.jpg");
+//	ImgDetect(detector, "../../data/lena.jpg");
 
-//	WebCamDetect(detector);
+	WebCamDetect(detector);
 
 	waitKey();
 	cvDestroyWindow(W_NAME);
@@ -45,7 +46,7 @@ int main(int argv, char **args)
 
 }
 
-void ImgDetect(GpuObjDetector& detector, const char *img_path) {
+void ImgDetect(ObjDetector& detector, const char *img_path) {
 	Mat img = imread(img_path);
 
 	if (img.empty()) {
@@ -57,7 +58,7 @@ void ImgDetect(GpuObjDetector& detector, const char *img_path) {
 }
 
 
-void WebCamDetect(GpuObjDetector& detector) {
+void WebCamDetect(ObjDetector& detector) {
 	CvCapture *capture;
 
 	capture = cvCaptureFromCAM(-1);
@@ -103,7 +104,7 @@ void WebCamDetect(GpuObjDetector& detector) {
 
 }
 
-void DetectAndDisplay(Mat& img, GpuObjDetector& detector) {
+void DetectAndDisplay(Mat& img, ObjDetector& detector) {
 	Mat gray_img = img;
 	cvtColor(img, gray_img, CV_BGR2GRAY);
 //	equalizeHist(gray_img, gray_img);
