@@ -95,12 +95,11 @@ __global__ void kernel_detect_objs(int num_stage,
 
 	if (!(i_subwindow < num_subwindows)) return;
 
-	SubWindow s = subwindows[i_subwindow];
-	float scale = s.scale;
-	int x = s.x;
-	int y = s.y;
-	int width = s.w;
-	int height = s.h;
+	float scale = subwindows[i_subwindow].scale;
+	int x = subwindows[i_subwindow].x;
+	int y = subwindows[i_subwindow].y;
+	int width = subwindows[i_subwindow].w;
+	int height = subwindows[i_subwindow].h;
 
 	float inv = 1.f / (height * width);
 	float mean = RectSum(ii, x, y, width, height, ii_width) * inv;
@@ -122,10 +121,10 @@ __global__ void kernel_detect_objs(int num_stage,
 			Rectangle &rect = tree.feature.rects[k];
 			if (rect.wg == 0) break;
 
-			rects_sum = rects_sum + RectSum(ii, x + (rect.x * scale),
-												y + (rect.y * scale),
-												(rect.w * scale),
-												(rect.h * scale), ii_width) * rect.wg;
+			rects_sum = rects_sum + RectSum(ii, x + (int)(rect.x * scale),
+												y + (int)(rect.y * scale),
+												(int)(rect.w * scale),
+												(int)(rect.h * scale), ii_width) * rect.wg;
 		}
 
 		tree_sum += ((rects_sum * inv < tree.threshold * std_dev) ? tree.left_val : tree.right_val);

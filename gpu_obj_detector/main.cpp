@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include "CpuObjDetector.h"
 #include <iostream>
-#include "gpuDetectObjs.h"
 #include "SubWindow.h"
 #include "utils.h"
 #include <time.h>
@@ -17,8 +16,8 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 
-#define WEB_CAM_WIDTH 320
-#define WEB_CAM_HEIGHT 240
+#define WEB_CAM_WIDTH 640
+#define WEB_CAM_HEIGHT 480
 #define W_NAME "Detection"
 
 using namespace std;
@@ -33,12 +32,12 @@ int main(int argv, char **args)
 	HaarCascade haar_cascade;
 	LoadCascade("../../data/haarcascade_frontalface_alt.xml", haar_cascade);
 
-	GpuObjDetector detector(WEB_CAM_WIDTH, WEB_CAM_HEIGHT, haar_cascade);
-//	GpuObjDetector detector(512, 512, haar_cascade);
+//	GpuObjDetector detector(WEB_CAM_WIDTH, WEB_CAM_HEIGHT, haar_cascade);
+	GpuObjDetector detector(600, 597, haar_cascade);
 
-//	ImgDetect(detector, "../../data/lena.jpg");
+	ImgDetect(detector, "../../data/judybats.jpg");
 
-	WebCamDetect(detector);
+//	WebCamDetect(detector);
 
 	waitKey();
 	cvDestroyWindow(W_NAME);

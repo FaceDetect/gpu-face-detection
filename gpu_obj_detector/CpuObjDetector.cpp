@@ -13,11 +13,8 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
-#include "gpu_compute_ii.h"
-#include "gpuDetectObjs.h"
 
 using namespace std;
-using namespace cv;
 
 CpuObjDetector::CpuObjDetector(int w, int h, HaarCascade& cascade) :
 		pic_width(w),
