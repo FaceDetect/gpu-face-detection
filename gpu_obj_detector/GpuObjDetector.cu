@@ -12,7 +12,7 @@
 #include <iostream>
 #include <algorithm>
 
-#define MAX_THREAD 416
+#define MAX_THREAD 256
 
 using namespace std;
 
@@ -211,7 +211,7 @@ void GpuObjDetector::Detect(int *g_img, std::vector<SubWindow>& objs) {
 	HANDLE_ERROR(cudaMemcpy(dev_img, g_img, img_mem_size, cudaMemcpyHostToDevice));
 	GpuComputeII(dev_img, dev_ii, dev_ii2, img_height, img_width);
 	objs = all_subwindows;
-	DetectAtSubwindows(dev_ii, dev_ii, img_width, img_height, haar_cascade, objs);
+	DetectAtSubwindows(dev_ii, dev_ii2, img_width, img_height, haar_cascade, objs);
 
 	cudaEventRecord(stop, 0);
 	cudaEventSynchronize(stop);
