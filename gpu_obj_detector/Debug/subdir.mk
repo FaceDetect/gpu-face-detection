@@ -4,8 +4,10 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../Application.cpp \
 ../CpuObjDetector.cpp \
-../ObjDetector.cpp \
+../ImgMedia.cpp \
+../WebCamMedia.cpp \
 ../main.cpp \
 ../utils.cpp 
 
@@ -18,16 +20,20 @@ CU_DEPS += \
 ./gpu_utils.d 
 
 OBJS += \
+./Application.o \
 ./CpuObjDetector.o \
 ./GpuObjDetector.o \
-./ObjDetector.o \
+./ImgMedia.o \
+./WebCamMedia.o \
 ./gpu_utils.o \
 ./main.o \
 ./utils.o 
 
 CPP_DEPS += \
+./Application.d \
 ./CpuObjDetector.d \
-./ObjDetector.d \
+./ImgMedia.d \
+./WebCamMedia.d \
 ./main.d \
 ./utils.d 
 

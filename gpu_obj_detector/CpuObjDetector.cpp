@@ -33,7 +33,7 @@ CpuObjDetector::~CpuObjDetector() {
 }
 
 void CpuObjDetector::Detect(int *g_img, vector<SubWindow>& objs) {
-	const clock_t begin_time = clock();
+//	const clock_t begin_time = clock();
 
 	memcpy(grayscaled_bytes, g_img, pic_width * pic_height * sizeof(int));
 
@@ -78,7 +78,7 @@ void CpuObjDetector::Detect(int *g_img, vector<SubWindow>& objs) {
 		height = (int)(haar_cascade.window_height * scale);
 	}
 
-	std::cout << endl << "Time elapsed: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
+//	std::cout << endl << "Time elapsed: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
 
 }
 

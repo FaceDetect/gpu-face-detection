@@ -12,7 +12,7 @@
 #include <iostream>
 #include <algorithm>
 
-#define MAX_THREAD 256
+#define MAX_THREAD 416
 
 using namespace std;
 
@@ -201,25 +201,25 @@ GpuObjDetector::GpuObjDetector(int w, int h, HaarCascade& cascade) :
 
 
 void GpuObjDetector::Detect(int *g_img, std::vector<SubWindow>& objs) {
-	cudaEvent_t start, stop;
-	float elapsed;
+//	cudaEvent_t start, stop;
+//	float elapsed;
 
-	cudaEventCreate(&start);
-	cudaEventCreate(&stop);
-	cudaEventRecord(start, 0);
+//	cudaEventCreate(&start);
+//	cudaEventCreate(&stop);
+//	cudaEventRecord(start, 0);
 
 	HANDLE_ERROR(cudaMemcpy(dev_img, g_img, img_mem_size, cudaMemcpyHostToDevice));
 	GpuComputeII(dev_img, dev_ii, dev_ii2, img_height, img_width);
 	objs = all_subwindows;
 	DetectAtSubwindows(dev_ii, dev_ii2, img_width, img_height, haar_cascade, objs);
 
-	cudaEventRecord(stop, 0);
-	cudaEventSynchronize(stop);
-	cudaEventElapsedTime(&elapsed, start, stop);
-	DBG_WRP(cout << "Total elapsed: " << elapsed << endl);
-
-	cudaEventDestroy(start);
-	cudaEventDestroy(stop);
+//	cudaEventRecord(stop, 0);
+//	cudaEventSynchronize(stop);
+//	cudaEventElapsedTime(&elapsed, start, stop);
+//	DBG_WRP(cout << "Total elapsed: " << elapsed << endl);
+//
+//	cudaEventDestroy(start);
+//	cudaEventDestroy(stop);
 }
 
 
