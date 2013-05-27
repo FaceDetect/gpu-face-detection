@@ -12,8 +12,8 @@
 
 int main(int argv, char **args)
 {
-//	ImgMedia media("../../data/judybats.jpg");
-	WebCamMedia media(640, 480);
+	ImgMedia media("../../data/judybats.jpg");
+//	WebCamMedia media(640, 480);
 
 	Application app(media, "../../data/haarcascade_frontalface_alt.xml");
 	app.Run();
