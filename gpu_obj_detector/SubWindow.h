@@ -15,22 +15,19 @@ struct SubWindow {
 		y(0),
 		w(0),
 		h(0),
-		scale(0),
-		is_object(0) { }
+		scale(0) { }
 
 	SubWindow(int x, int y, int w, int h, float scale) :
 		x(x),
 		y(y),
 		w(w),
 		h(h),
-		scale(scale),
-		is_object(1) { }
+		scale(scale) { }
 
 	int x;
 	int y;
 	int w;
 	int h;
-	int is_object;
 	float scale;
 };
 

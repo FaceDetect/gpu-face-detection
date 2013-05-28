@@ -23,6 +23,7 @@ private:
 
 	void DetectAtSubwindows(std::vector<SubWindow>& subwindows);
 	void GpuComputeII();
+	void PrecalcInvAndStdDev(int num);
 	void CompactArrays(int& num_subwindows);
 	int *dev_img;
 	int *dev_ii;
@@ -33,6 +34,12 @@ private:
 
 	int *dev_is_valid;
 	int *dev_indexes;
+
+	float *dev_inv_in;
+	float *dev_inv_out;
+	float *dev_std_dev_in;
+	float *dev_std_dev_out;
+
 
 	std::vector<SubWindow> all_subwindows;
 	int img_width;

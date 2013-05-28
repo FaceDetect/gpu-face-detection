@@ -19,6 +19,11 @@ using namespace std;
 
 __constant__ __align__(4) char stage_buf[sizeof(Stage)];
 
+
+inline int GetNumBlocks(int n) {
+	return ceilf((float) n / MAX_THREAD);
+}
+
 __device__ inline int RectSum(const int* ii, int x, int y, int w, int h, int ii_width) {
 
 	return ii[y * ii_width + x] +
@@ -81,13 +86,97 @@ void GpuObjDetector::GpuComputeII() {
 	kernel_ii_cols<<<grid_cols, block>>>(dev_ii, dev_ii2, img_height, img_width);
 }
 
+__global__ void kernel_precalc_inv_and_stddev(const SubWindow *subwindows,
+											  const int *ii,
+											  const int *ii2,
+											  float *invs,
+											  float *std_devs,
+											  int ii_width,
+											  int num) {
+	int i = threadIdx.x + blockIdx.x * blockDim.x;
+
+	if (i < num) {
+
+		int x = subwindows[i].x;
+		int y = subwindows[i].y;
+		int width = subwindows[i].w;
+		int height = subwindows[i].h;
+
+		float inv = 1.f / (height * width);
+		float mean = RectSum(ii, x, y, width, height, ii_width) * inv;
+		float variance = abs(RectSum(ii2, x, y, width, height, ii_width) * inv - mean * mean);
+
+		float std_dev = sqrtf(variance);
+
+		invs[i] = inv;
+		std_devs[i] = std_dev;
+	}
+}
+
+void GpuObjDetector::PrecalcInvAndStdDev(int num) {
+	kernel_precalc_inv_and_stddev<<<GetNumBlocks(num), MAX_THREAD>>>(dev_subwindows_in,
+																	 dev_ii,
+																	 dev_ii2,
+																	 dev_inv_in,
+																	 dev_std_dev_in,
+																	 img_width + 1,
+																	 num);
+}
+
+__global__ void kernel_compact_arrays(const SubWindow *subwindows_in,
+									  SubWindow *subwindows_out,
+									  const float *invs_in,
+									  float *invs_out,
+									  const float *std_dev_in,
+									  float *std_dev_out,
+									  const int *is_valid,
+									  const int *indexes,
+									  int num) {
+	int i = threadIdx.x + blockIdx.x * blockDim.x;
+
+	if ((i < num) && is_valid[i]) {
+
+		int pos = indexes[i] - 1;
+
+		subwindows_out[pos] = subwindows_in[i];
+		invs_out[pos] = invs_in[i];
+		std_dev_out[pos] = std_dev_in[i];
+
+	}
+}
+
+
+void GpuObjDetector::CompactArrays(int& num_subwindows) {
+	CUDPPHandle scan_plan;
+	cudppPlan(lib, &scan_plan, scan_conf, num_subwindows, 1, 0);
+	cudppScan(scan_plan, dev_indexes, dev_is_valid, num_subwindows);
+
+	kernel_compact_arrays<<<GetNumBlocks(num_subwindows), MAX_THREAD>>>(dev_subwindows_in,
+																		dev_subwindows_out,
+																		dev_inv_in,
+																		dev_inv_out,
+																		dev_std_dev_in,
+																		dev_std_dev_out,
+																		dev_is_valid,
+																		dev_indexes,
+																		num_subwindows);
+
+	cudaMemcpy(&num_subwindows, (dev_indexes + num_subwindows - 1), sizeof(int), cudaMemcpyDeviceToHost);
+
+	swap(dev_subwindows_in, dev_subwindows_out);
+	swap(dev_inv_in, dev_inv_out);
+	swap(dev_std_dev_in, dev_std_dev_out);
+
+}
 
 __global__ void kernel_detect_objs(int num_stage,
 								   const int *ii,
 								   const int *ii2,
+								   const float *invs,
+								   const float *std_devs,
 								   int ii_width,
 								   int ii_height,
-								   SubWindow *subwindows,
+								   const SubWindow *subwindows,
 								   int *is_valid,
 								   int num_subwindows) {
 	// 244 216 123 123 6.19174
@@ -99,14 +188,10 @@ __global__ void kernel_detect_objs(int num_stage,
 	float scale = subwindows[i_subwindow].scale;
 	int x = subwindows[i_subwindow].x;
 	int y = subwindows[i_subwindow].y;
-	int width = subwindows[i_subwindow].w;
-	int height = subwindows[i_subwindow].h;
 
-	float inv = 1.f / (height * width);
-	float mean = RectSum(ii, x, y, width, height, ii_width) * inv;
-	float variance = abs(RectSum(ii2, x, y, width, height, ii_width) * inv - mean * mean);
+	float inv = invs[i_subwindow];
 
-	float std_dev = sqrtf(variance);
+	float std_dev = std_devs[i_subwindow];
 
 	Stage &stage = (Stage&)stage_buf;
 
@@ -133,71 +218,26 @@ __global__ void kernel_detect_objs(int num_stage,
 
 
 	is_valid[i_subwindow] = (tree_sum >= stage.threshold);
-
-//	if (tree_sum < stage.threshold) {
-//		subwindows[i_subwindow].is_object = 0;
-//	}
-
-}
-
-bool isNonObject(const SubWindow& s) {
-	return !s.is_object;
-}
-
-__global__ void kernel_compact_arrays(const SubWindow *subwindows_in,
-									  SubWindow *subwindows_out,
-									  int *is_valid,
-									  int *indexes,
-									  int num) {
-	int i = threadIdx.x + blockIdx.x * blockDim.x;
-
-	if ((i < num) && is_valid[i]) {
-
-		subwindows_out[indexes[i] - 1] = subwindows_in[i];
-
-	}
-}
-
-inline int GetNumBlocks(int n) {
-	return ceilf((float) n / MAX_THREAD);
-}
-
-void GpuObjDetector::CompactArrays(int& num_subwindows) {
-	CUDPPHandle scan_plan;
-	cudppPlan(lib, &scan_plan, scan_conf, num_subwindows, 1, 0);
-	cudppScan(scan_plan, dev_indexes, dev_is_valid, num_subwindows);
-
-	kernel_compact_arrays<<<GetNumBlocks(num_subwindows), MAX_THREAD>>>(dev_subwindows_in,
-																		dev_subwindows_out,
-																		dev_is_valid,
-																		dev_indexes,
-																		num_subwindows);
-
-	cudaMemcpy(&num_subwindows, (dev_indexes + num_subwindows - 1), sizeof(int), cudaMemcpyDeviceToHost);
-
-	SubWindow *tmp;
-	tmp = dev_subwindows_in;
-	dev_subwindows_in = dev_subwindows_out;
-	dev_subwindows_out = tmp;
 }
 
 void GpuObjDetector::DetectAtSubwindows(vector<SubWindow>& subwindows) {
 
-
 	int num_subwindows = subwindows.size();
 	HANDLE_ERROR(cudaMemcpy(dev_subwindows_in, &subwindows[0], sizeof(SubWindow) * num_subwindows, cudaMemcpyHostToDevice));
 
+	PrecalcInvAndStdDev(num_subwindows);
+
 	for (int i = 0; i < HAAR_MAX_STAGES; i++) {
 
-//		int num_subwindows = subwindows.size();
 		int num_blocks = ceilf((float) num_subwindows / MAX_THREAD);
 
-//		HANDLE_ERROR(cudaMemcpy(dev_subwindows_in, &subwindows[0], sizeof(SubWindow) * num_subwindows, cudaMemcpyHostToDevice));
 		HANDLE_ERROR(cudaMemcpyToSymbol(stage_buf, &haar_cascade.stages[i], sizeof(Stage)));
 
-		kernel_detect_objs<<<num_blocks, MAX_THREAD>>>(i,
+		kernel_detect_objs<<<GetNumBlocks(num_subwindows), MAX_THREAD>>>(i,
 											dev_ii,
 											dev_ii2,
+											dev_inv_in,
+											dev_std_dev_in,
 											img_width + 1,
 											img_height + 1,
 											dev_subwindows_in,
@@ -205,12 +245,6 @@ void GpuObjDetector::DetectAtSubwindows(vector<SubWindow>& subwindows) {
 											num_subwindows);
 
 		CompactArrays(num_subwindows);
-
-//		HANDLE_ERROR(cudaMemcpy(&subwindows[0], dev_subwindows_in, sizeof(SubWindow) * num_subwindows, cudaMemcpyDeviceToHost));
-
-//		subwindows.erase(remove_if(subwindows.begin(), subwindows.end(), isNonObject), subwindows.end());
-//		DBG_WRP(cout << "Subwindows after stage " << i << " : " << subwindows.size() << endl << endl);
-
 	}
 
 	subwindows.resize(num_subwindows);
@@ -241,6 +275,12 @@ GpuObjDetector::GpuObjDetector(int w, int h, HaarCascade& cascade) :
 	HANDLE_ERROR(cudaMalloc(&dev_is_valid, sizeof(int) * all_subwindows.size()));
 	HANDLE_ERROR(cudaMalloc(&dev_indexes, sizeof(int) * all_subwindows.size()));
 
+	HANDLE_ERROR(cudaMalloc(&dev_inv_in, sizeof(float) * all_subwindows.size()));
+	HANDLE_ERROR(cudaMalloc(&dev_inv_out, sizeof(float) * all_subwindows.size()));
+	HANDLE_ERROR(cudaMalloc(&dev_std_dev_in, sizeof(float) * all_subwindows.size()));
+	HANDLE_ERROR(cudaMalloc(&dev_std_dev_out, sizeof(float) * all_subwindows.size()));
+
+
 	cudppCreate(&lib);
 	scan_conf.op = CUDPP_ADD;
 	scan_conf.datatype = CUDPP_INT;
@@ -267,5 +307,11 @@ GpuObjDetector::~GpuObjDetector() {
 	HANDLE_ERROR(cudaFree(dev_subwindows_out));
 	HANDLE_ERROR(cudaFree(dev_is_valid));
 	HANDLE_ERROR(cudaFree(dev_indexes));
+
+	HANDLE_ERROR(cudaFree(dev_inv_in));
+	HANDLE_ERROR(cudaFree(dev_inv_out));
+	HANDLE_ERROR(cudaFree(dev_std_dev_in));
+	HANDLE_ERROR(cudaFree(dev_std_dev_out));
+
 
 }
