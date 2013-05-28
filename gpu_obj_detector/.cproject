@@ -47,6 +47,7 @@
 							<tool id="nvcc.linker.base.337430795" name="NVCC Linker" superClass="nvcc.linker.base">
 								<option id="nvcc.linker.option.libs.679471461" name="Libraries (-l)" superClass="nvcc.linker.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="opencv_imgproc"/>
+									<listOptionValue builtIn="false" value="cudpp"/>
 									<listOptionValue builtIn="false" value="opencv_contrib"/>
 									<listOptionValue builtIn="false" value="opencv_highgui"/>
 									<listOptionValue builtIn="false" value="opencv_core"/>

@@ -9,6 +9,15 @@
 #define SUBWINDOW_H_
 
 struct SubWindow {
+
+	SubWindow() :
+		x(0),
+		y(0),
+		w(0),
+		h(0),
+		scale(0),
+		is_object(0) { }
+
 	SubWindow(int x, int y, int w, int h, float scale) :
 		x(x),
 		y(y),

@@ -12,6 +12,7 @@
 #include "SubWindow.h"
 
 #include <vector>
+#include <cudpp.h>
 
 class GpuObjDetector : public ObjDetector {
 public:
@@ -22,14 +23,24 @@ private:
 
 	void DetectAtSubwindows(std::vector<SubWindow>& subwindows);
 	void GpuComputeII();
+	void CompactArrays(int& num_subwindows);
 	int *dev_img;
 	int *dev_ii;
 	int *dev_ii2;
-	SubWindow *dev_subwindows;
+
+	SubWindow *dev_subwindows_in;
+	SubWindow *dev_subwindows_out;
+
+	int *dev_is_valid;
+	int *dev_indexes;
+
 	std::vector<SubWindow> all_subwindows;
 	int img_width;
 	int img_height;
 	HaarCascade haar_cascade;
+
+	CUDPPHandle lib;
+	CUDPPConfiguration scan_conf;
 
 	int img_mem_size;
 	int ii_mem_size;

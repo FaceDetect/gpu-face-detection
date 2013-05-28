@@ -88,6 +88,7 @@ __global__ void kernel_detect_objs(int num_stage,
 								   int ii_width,
 								   int ii_height,
 								   SubWindow *subwindows,
+								   int *is_valid,
 								   int num_subwindows) {
 	// 244 216 123 123 6.19174
 
@@ -131,10 +132,11 @@ __global__ void kernel_detect_objs(int num_stage,
 	}
 
 
+	is_valid[i_subwindow] = (tree_sum >= stage.threshold);
 
-	if (tree_sum < stage.threshold) {
-		subwindows[i_subwindow].is_object = 0;
-	}
+//	if (tree_sum < stage.threshold) {
+//		subwindows[i_subwindow].is_object = 0;
+//	}
 
 }
 
@@ -142,14 +144,55 @@ bool isNonObject(const SubWindow& s) {
 	return !s.is_object;
 }
 
+__global__ void kernel_compact_arrays(const SubWindow *subwindows_in,
+									  SubWindow *subwindows_out,
+									  int *is_valid,
+									  int *indexes,
+									  int num) {
+	int i = threadIdx.x + blockIdx.x * blockDim.x;
+
+	if ((i < num) && is_valid[i]) {
+
+		subwindows_out[indexes[i] - 1] = subwindows_in[i];
+
+	}
+}
+
+inline int GetNumBlocks(int n) {
+	return ceilf((float) n / MAX_THREAD);
+}
+
+void GpuObjDetector::CompactArrays(int& num_subwindows) {
+	CUDPPHandle scan_plan;
+	cudppPlan(lib, &scan_plan, scan_conf, num_subwindows, 1, 0);
+	cudppScan(scan_plan, dev_indexes, dev_is_valid, num_subwindows);
+
+	kernel_compact_arrays<<<GetNumBlocks(num_subwindows), MAX_THREAD>>>(dev_subwindows_in,
+																		dev_subwindows_out,
+																		dev_is_valid,
+																		dev_indexes,
+																		num_subwindows);
+
+	cudaMemcpy(&num_subwindows, (dev_indexes + num_subwindows - 1), sizeof(int), cudaMemcpyDeviceToHost);
+
+	SubWindow *tmp;
+	tmp = dev_subwindows_in;
+	dev_subwindows_in = dev_subwindows_out;
+	dev_subwindows_out = tmp;
+}
+
 void GpuObjDetector::DetectAtSubwindows(vector<SubWindow>& subwindows) {
+
+
+	int num_subwindows = subwindows.size();
+	HANDLE_ERROR(cudaMemcpy(dev_subwindows_in, &subwindows[0], sizeof(SubWindow) * num_subwindows, cudaMemcpyHostToDevice));
 
 	for (int i = 0; i < HAAR_MAX_STAGES; i++) {
 
-		int num_subwindows = subwindows.size();
+//		int num_subwindows = subwindows.size();
 		int num_blocks = ceilf((float) num_subwindows / MAX_THREAD);
 
-		HANDLE_ERROR(cudaMemcpy(dev_subwindows, &subwindows[0], sizeof(SubWindow) * num_subwindows, cudaMemcpyHostToDevice));
+//		HANDLE_ERROR(cudaMemcpy(dev_subwindows_in, &subwindows[0], sizeof(SubWindow) * num_subwindows, cudaMemcpyHostToDevice));
 		HANDLE_ERROR(cudaMemcpyToSymbol(stage_buf, &haar_cascade.stages[i], sizeof(Stage)));
 
 		kernel_detect_objs<<<num_blocks, MAX_THREAD>>>(i,
@@ -157,15 +200,22 @@ void GpuObjDetector::DetectAtSubwindows(vector<SubWindow>& subwindows) {
 											dev_ii2,
 											img_width + 1,
 											img_height + 1,
-											dev_subwindows,
+											dev_subwindows_in,
+											dev_is_valid,
 											num_subwindows);
 
-		HANDLE_ERROR(cudaMemcpy(&subwindows[0], dev_subwindows, sizeof(SubWindow) * num_subwindows, cudaMemcpyDeviceToHost));
+		CompactArrays(num_subwindows);
 
-		subwindows.erase(remove_if(subwindows.begin(), subwindows.end(), isNonObject), subwindows.end());
+//		HANDLE_ERROR(cudaMemcpy(&subwindows[0], dev_subwindows_in, sizeof(SubWindow) * num_subwindows, cudaMemcpyDeviceToHost));
+
+//		subwindows.erase(remove_if(subwindows.begin(), subwindows.end(), isNonObject), subwindows.end());
 //		DBG_WRP(cout << "Subwindows after stage " << i << " : " << subwindows.size() << endl << endl);
 
 	}
+
+	subwindows.resize(num_subwindows);
+	HANDLE_ERROR(cudaMemcpy(&subwindows[0], dev_subwindows_in, sizeof(SubWindow) * num_subwindows, cudaMemcpyDeviceToHost));
+
 }
 
 GpuObjDetector::GpuObjDetector(int w, int h, HaarCascade& cascade) :
@@ -186,8 +236,16 @@ GpuObjDetector::GpuObjDetector(int w, int h, HaarCascade& cascade) :
 					  haar_cascade.window_height,
 					  all_subwindows);
 
-	HANDLE_ERROR(cudaMalloc(&dev_subwindows, sizeof(SubWindow) * all_subwindows.size()));
+	HANDLE_ERROR(cudaMalloc(&dev_subwindows_in, sizeof(SubWindow) * all_subwindows.size()));
+	HANDLE_ERROR(cudaMalloc(&dev_subwindows_out, sizeof(SubWindow) * all_subwindows.size()));
+	HANDLE_ERROR(cudaMalloc(&dev_is_valid, sizeof(int) * all_subwindows.size()));
+	HANDLE_ERROR(cudaMalloc(&dev_indexes, sizeof(int) * all_subwindows.size()));
 
+	cudppCreate(&lib);
+	scan_conf.op = CUDPP_ADD;
+	scan_conf.datatype = CUDPP_INT;
+	scan_conf.algorithm = CUDPP_SCAN;
+	scan_conf.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE;
 
 }
 
@@ -205,5 +263,9 @@ GpuObjDetector::~GpuObjDetector() {
 	HANDLE_ERROR(cudaFree(dev_img));
 	HANDLE_ERROR(cudaFree(dev_ii));
 	HANDLE_ERROR(cudaFree(dev_ii2));
-	HANDLE_ERROR(cudaFree(dev_subwindows));
+	HANDLE_ERROR(cudaFree(dev_subwindows_in));
+	HANDLE_ERROR(cudaFree(dev_subwindows_out));
+	HANDLE_ERROR(cudaFree(dev_is_valid));
+	HANDLE_ERROR(cudaFree(dev_indexes));
+
 }
