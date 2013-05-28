@@ -9,6 +9,9 @@
 #define GPUOBJDETECTOR_H_
 
 #include "ObjDetector.h"
+#include "SubWindow.h"
+
+#include <vector>
 
 class GpuObjDetector : public ObjDetector {
 public:
@@ -16,9 +19,13 @@ public:
 	virtual void Detect(int *g_img, std::vector<SubWindow>& objs);
 	virtual ~GpuObjDetector();
 private:
+
+	void DetectAtSubwindows(std::vector<SubWindow>& subwindows);
+	void GpuComputeII();
 	int *dev_img;
 	int *dev_ii;
 	int *dev_ii2;
+	SubWindow *dev_subwindows;
 	std::vector<SubWindow> all_subwindows;
 	int img_width;
 	int img_height;

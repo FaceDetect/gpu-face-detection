@@ -68,17 +68,17 @@ __global__ void kernel_ii_cols(int *result, int *sq_result, int rows, int cols) 
 }
 
 
-void GpuComputeII(const int *dev_matr, int *dev_result, int *dev_sq_result, int rows, int cols) {
+void GpuObjDetector::GpuComputeII() {
 
-	HANDLE_ERROR(cudaMemset(dev_result, 0, (rows + 1) * (cols + 1) * sizeof(int)));
-	HANDLE_ERROR(cudaMemset(dev_sq_result, 0, (rows + 1) * (cols + 1) * sizeof(int)));
+	HANDLE_ERROR(cudaMemset(dev_ii, 0, ii_mem_size));
+	HANDLE_ERROR(cudaMemset(dev_ii2, 0, ii_mem_size));
 
 	dim3 block(512);
-	dim3 grid_rows(ceil(rows / 512.0));
-	dim3 grid_cols(ceil(cols / 512.0));
+	dim3 grid_rows(ceil(img_height / 512.0));
+	dim3 grid_cols(ceil(img_width / 512.0));
 
-	kernel_ii_rows<<<grid_rows, block>>>(dev_matr, dev_result, dev_sq_result, rows, cols);
-	kernel_ii_cols<<<grid_cols, block>>>(dev_result, dev_sq_result, rows, cols);
+	kernel_ii_rows<<<grid_rows, block>>>(dev_img, dev_ii, dev_ii2, img_height, img_width);
+	kernel_ii_cols<<<grid_cols, block>>>(dev_ii, dev_ii2, img_height, img_width);
 }
 
 
@@ -142,13 +142,7 @@ bool isNonObject(const SubWindow& s) {
 	return !s.is_object;
 }
 
-void DetectAtSubwindows(const int *dev_ii, const int *dev_ii2,
-						int img_width, int img_height,
-						const HaarCascade& haar_cascade,
-						vector<SubWindow>& subwindows) {
-
-	SubWindow *dev_subwindows;
-	HANDLE_ERROR(cudaMalloc(&dev_subwindows, sizeof(SubWindow) * subwindows.size()));
+void GpuObjDetector::DetectAtSubwindows(vector<SubWindow>& subwindows) {
 
 	for (int i = 0; i < HAAR_MAX_STAGES; i++) {
 
@@ -166,16 +160,12 @@ void DetectAtSubwindows(const int *dev_ii, const int *dev_ii2,
 											dev_subwindows,
 											num_subwindows);
 
-//		cudaDeviceSynchronize();
-
 		HANDLE_ERROR(cudaMemcpy(&subwindows[0], dev_subwindows, sizeof(SubWindow) * num_subwindows, cudaMemcpyDeviceToHost));
 
 		subwindows.erase(remove_if(subwindows.begin(), subwindows.end(), isNonObject), subwindows.end());
 //		DBG_WRP(cout << "Subwindows after stage " << i << " : " << subwindows.size() << endl << endl);
 
 	}
-
-	HANDLE_ERROR(cudaFree(dev_subwindows));
 }
 
 GpuObjDetector::GpuObjDetector(int w, int h, HaarCascade& cascade) :
@@ -196,6 +186,8 @@ GpuObjDetector::GpuObjDetector(int w, int h, HaarCascade& cascade) :
 					  haar_cascade.window_height,
 					  all_subwindows);
 
+	HANDLE_ERROR(cudaMalloc(&dev_subwindows, sizeof(SubWindow) * all_subwindows.size()));
+
 
 }
 
@@ -203,9 +195,9 @@ GpuObjDetector::GpuObjDetector(int w, int h, HaarCascade& cascade) :
 void GpuObjDetector::Detect(int *g_img, std::vector<SubWindow>& objs) {
 
 	HANDLE_ERROR(cudaMemcpy(dev_img, g_img, img_mem_size, cudaMemcpyHostToDevice));
-	GpuComputeII(dev_img, dev_ii, dev_ii2, img_height, img_width);
+	GpuComputeII();
 	objs = all_subwindows;
-	DetectAtSubwindows(dev_ii, dev_ii2, img_width, img_height, haar_cascade, objs);
+	DetectAtSubwindows(objs);
 }
 
 
@@ -213,5 +205,5 @@ GpuObjDetector::~GpuObjDetector() {
 	HANDLE_ERROR(cudaFree(dev_img));
 	HANDLE_ERROR(cudaFree(dev_ii));
 	HANDLE_ERROR(cudaFree(dev_ii2));
-
+	HANDLE_ERROR(cudaFree(dev_subwindows));
 }
