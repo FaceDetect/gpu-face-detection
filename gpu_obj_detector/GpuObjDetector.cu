@@ -167,6 +167,7 @@ void GpuObjDetector::CompactArrays(int& num_subwindows) {
 	swap(dev_inv_in, dev_inv_out);
 	swap(dev_std_dev_in, dev_std_dev_out);
 
+	cudppDestroyPlan(scan_plan);
 }
 
 __global__ void kernel_detect_objs(int num_stage,
@@ -228,8 +229,6 @@ void GpuObjDetector::DetectAtSubwindows(vector<SubWindow>& subwindows) {
 	PrecalcInvAndStdDev(num_subwindows);
 
 	for (int i = 0; i < HAAR_MAX_STAGES; i++) {
-
-		int num_blocks = ceilf((float) num_subwindows / MAX_THREAD);
 
 		HANDLE_ERROR(cudaMemcpyToSymbol(stage_buf, &haar_cascade.stages[i], sizeof(Stage)));
 
@@ -313,5 +312,6 @@ GpuObjDetector::~GpuObjDetector() {
 	HANDLE_ERROR(cudaFree(dev_std_dev_in));
 	HANDLE_ERROR(cudaFree(dev_std_dev_out));
 
+	cudppDestroy(lib);
 
 }

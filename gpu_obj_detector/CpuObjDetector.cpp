@@ -28,13 +28,12 @@ CpuObjDetector::CpuObjDetector(int w, int h, HaarCascade& cascade) :
 }
 
 CpuObjDetector::~CpuObjDetector() {
+	delete [] grayscaled_bytes;
 	delete [] ii;
 	delete [] ii2;
 }
 
 void CpuObjDetector::Detect(int *g_img, vector<SubWindow>& objs) {
-//	const clock_t begin_time = clock();
-
 	memcpy(grayscaled_bytes, g_img, pic_width * pic_height * sizeof(int));
 
 	ComputeIntegralImages();
@@ -44,16 +43,13 @@ void CpuObjDetector::Detect(int *g_img, vector<SubWindow>& objs) {
 	int width = haar_cascade.window_width;
 	int height = haar_cascade.window_height;
 
-//	int x = 244;
-//	int y = 216;
-//	float scale = 6.19174248;
 	while (OR_MIN(width, height) <= OR_MIN(pic_width, pic_height)) {
 
-		int x_step = 5;//OR_MAX(1, OR_MIN(4, floor(width / 10)));
-		int y_step = 5;//OR_MAX(1, OR_MIN(4, floor(height / 10)));
+		int x_step = 5;
+		int y_step = 5;
 
 		double inv = 1.0 / (width * height);
-//
+
 		for (int y = 0; y < pic_height - height; y += y_step) {
 			for (int x = 0; x < pic_width - width; x += x_step) {
 
@@ -77,9 +73,6 @@ void CpuObjDetector::Detect(int *g_img, vector<SubWindow>& objs) {
 		width = (int)(haar_cascade.window_width * scale);
 		height = (int)(haar_cascade.window_height * scale);
 	}
-
-//	std::cout << endl << "Time elapsed: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
-
 }
 
 void CpuObjDetector::ComputeIntegralImages() {
@@ -133,9 +126,4 @@ inline int CpuObjDetector::RectSum(int* ii, int x, int y, int w, int h) {
 		   MatrVal(ii, y + h, x + w, pic_width + 1) -
 		   MatrVal(ii, y, x + w, pic_width + 1) -
 		   MatrVal(ii, y + h, x, pic_width + 1);
-//
-//	return MatrVal(ii, y, x) +
-//		   MatrVal(ii, y + w, x + h) -
-//		   MatrVal(ii, y, x + w) -
-//		   MatrVal(ii, y + h, x);
 }

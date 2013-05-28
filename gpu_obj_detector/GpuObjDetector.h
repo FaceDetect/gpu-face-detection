@@ -25,6 +25,8 @@ private:
 	void GpuComputeII();
 	void PrecalcInvAndStdDev(int num);
 	void CompactArrays(int& num_subwindows);
+
+
 	int *dev_img;
 	int *dev_ii;
 	int *dev_ii2;
