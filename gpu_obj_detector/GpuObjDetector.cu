@@ -118,7 +118,8 @@ __global__ void kernel_precalc_inv_and_stddev(const ScaledRectangle *subwindows,
 }
 
 void GpuObjDetector::PrecalcInvAndStdDev() {
-	kernel_precalc_inv_and_stddev<<<GetNumBlocks(all_subwindows.size()),
+	int num = all_subwindows.size();
+	kernel_precalc_inv_and_stddev<<<GetNumBlocks(num),
 									MAX_THREAD>>>(dev_subwindows_in,
 												  dev_ii,
 												  dev_ii2,
