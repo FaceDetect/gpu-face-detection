@@ -117,14 +117,15 @@ __global__ void kernel_precalc_inv_and_stddev(const ScaledRectangle *subwindows,
 	}
 }
 
-void GpuObjDetector::PrecalcInvAndStdDev(int num) {
-	kernel_precalc_inv_and_stddev<<<GetNumBlocks(num), MAX_THREAD>>>(dev_subwindows_in,
-																	 dev_ii,
-																	 dev_ii2,
-																	 dev_inv_in,
-																	 dev_std_dev_in,
-																	 img_width + 1,
-																	 num);
+void GpuObjDetector::PrecalcInvAndStdDev() {
+	kernel_precalc_inv_and_stddev<<<GetNumBlocks(all_subwindows.size()),
+									MAX_THREAD>>>(dev_subwindows_in,
+												  dev_ii,
+												  dev_ii2,
+												  dev_inv_in,
+												  dev_std_dev_in,
+												  img_width + 1,
+												  num);
 }
 
 __global__ void kernel_compact_arrays(const ScaledRectangle *subwindows_in,
@@ -236,7 +237,7 @@ void GpuObjDetector::DetectAtSubwindows(vector<Rectangle>& objs) {
 	int num_subwindows = all_subwindows.size();
 	HANDLE_ERROR(cudaMemcpy(dev_subwindows_in, &all_subwindows[0], sizeof(ScaledRectangle) * num_subwindows, cudaMemcpyHostToDevice));
 
-	PrecalcInvAndStdDev(num_subwindows);
+	PrecalcInvAndStdDev();
 
 	for (int i = 0; i < HAAR_MAX_STAGES; i++) {
 

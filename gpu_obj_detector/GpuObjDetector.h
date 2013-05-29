@@ -21,7 +21,7 @@ private:
 
 	void DetectAtSubwindows(std::vector<Rectangle>& objs);
 	void GpuComputeII();
-	void PrecalcInvAndStdDev(int num);
+	void PrecalcInvAndStdDev();
 	void CompactArrays(int& num_subwindows);
 	void PrecalcSubwindows();
 
