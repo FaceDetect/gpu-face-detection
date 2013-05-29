@@ -90,7 +90,7 @@ void GpuObjDetector::GpuComputeII() {
 	kernel_ii_cols<<<grid_cols, block>>>(dev_ii, dev_ii2, img_height, img_width);
 }
 
-__global__ void kernel_precalc_inv_and_stddev(const SubWindow *subwindows,
+__global__ void kernel_precalc_inv_and_stddev(const ScaledRectangle *subwindows,
 											  const int *ii,
 											  const int *ii2,
 											  float *invs,
@@ -127,8 +127,8 @@ void GpuObjDetector::PrecalcInvAndStdDev(int num) {
 																	 num);
 }
 
-__global__ void kernel_compact_arrays(const SubWindow *subwindows_in,
-									  SubWindow *subwindows_out,
+__global__ void kernel_compact_arrays(const ScaledRectangle *subwindows_in,
+									  ScaledRectangle *subwindows_out,
 									  const float *invs_in,
 									  float *invs_out,
 									  const float *std_dev_in,
@@ -187,7 +187,7 @@ __global__ void kernel_detect_objs(const int *ii,
 								   const float *std_devs,
 								   int ii_width,
 								   int ii_height,
-								   const SubWindow *subwindows,
+								   const ScaledRectangle *subwindows,
 								   int *is_valid,
 								   int num_subwindows) {
 	// 244 216 123 123 6.19174
@@ -215,7 +215,7 @@ __global__ void kernel_detect_objs(const int *ii,
 		float rects_sum = 0;
 
 		for (int k = 0; k < HAAR_MAX_RECTS; k++) {
-			Rectangle &rect = tree.feature.rects[k];
+			WeightedRectangle &rect = tree.feature.rects[k];
 			if (rect.wg == 0) break;
 
 			rects_sum = rects_sum + RectSum(ii, x + (int)(rect.x * scale),
@@ -231,10 +231,10 @@ __global__ void kernel_detect_objs(const int *ii,
 	is_valid[i_subwindow] = (tree_sum >= stage.threshold);
 }
 
-void GpuObjDetector::DetectAtSubwindows(vector<SubWindow>& subwindows) {
+void GpuObjDetector::DetectAtSubwindows(vector<ScaledRectangle> subwindows, vector<Rectangle>& objs) {
 
 	int num_subwindows = subwindows.size();
-	HANDLE_ERROR(cudaMemcpy(dev_subwindows_in, &subwindows[0], sizeof(SubWindow) * num_subwindows, cudaMemcpyHostToDevice));
+	HANDLE_ERROR(cudaMemcpy(dev_subwindows_in, &subwindows[0], sizeof(ScaledRectangle) * num_subwindows, cudaMemcpyHostToDevice));
 
 	PrecalcInvAndStdDev(num_subwindows);
 
@@ -259,7 +259,9 @@ void GpuObjDetector::DetectAtSubwindows(vector<SubWindow>& subwindows) {
 	}
 
 	subwindows.resize(num_subwindows);
-	HANDLE_ERROR(cudaMemcpy(&subwindows[0], dev_subwindows_in, sizeof(SubWindow) * num_subwindows, cudaMemcpyDeviceToHost));
+	HANDLE_ERROR(cudaMemcpy(&subwindows[0], dev_subwindows_in, sizeof(ScaledRectangle) * num_subwindows, cudaMemcpyDeviceToHost));
+
+	objs.assign(subwindows.begin(), subwindows.end());
 
 }
 
@@ -281,8 +283,8 @@ GpuObjDetector::GpuObjDetector(int w, int h, HaarCascade& cascade) :
 					  haar_cascade.window_height,
 					  all_subwindows);
 
-	HANDLE_ERROR(cudaMalloc(&dev_subwindows_in, sizeof(SubWindow) * all_subwindows.size()));
-	HANDLE_ERROR(cudaMalloc(&dev_subwindows_out, sizeof(SubWindow) * all_subwindows.size()));
+	HANDLE_ERROR(cudaMalloc(&dev_subwindows_in, sizeof(ScaledRectangle) * all_subwindows.size()));
+	HANDLE_ERROR(cudaMalloc(&dev_subwindows_out, sizeof(ScaledRectangle) * all_subwindows.size()));
 	HANDLE_ERROR(cudaMalloc(&dev_is_valid, sizeof(int) * all_subwindows.size()));
 	HANDLE_ERROR(cudaMalloc(&dev_indexes, sizeof(int) * all_subwindows.size()));
 
@@ -301,12 +303,11 @@ GpuObjDetector::GpuObjDetector(int w, int h, HaarCascade& cascade) :
 }
 
 
-void GpuObjDetector::Detect(int *g_img, std::vector<SubWindow>& objs) {
+void GpuObjDetector::Detect(int *g_img, std::vector<Rectangle>& objs) {
 
 	HANDLE_ERROR(cudaMemcpy(dev_img, g_img, img_mem_size, cudaMemcpyHostToDevice));
 	GpuComputeII();
-	objs = all_subwindows;
-	DetectAtSubwindows(objs);
+	DetectAtSubwindows(all_subwindows, objs);
 }
 
 

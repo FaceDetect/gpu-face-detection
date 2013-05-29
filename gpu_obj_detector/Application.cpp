@@ -6,7 +6,6 @@
  */
 
 #include "Application.h"
-#include "SubWindow.h"
 #include "GpuObjDetector.h"
 #include "CpuObjDetector.h"
 #include "utils.h"
@@ -68,7 +67,7 @@ void Application::DetectAndDisplay(Mat& img) {
 	cvtColor(img, gray_img, CV_BGR2GRAY);
 //	equalizeHist(gray_img, gray_img);
 
-	vector<SubWindow> objs;
+	vector<Rectangle> objs;
 
 	detector->Detect(((Mat_<int>) gray_img).ptr<int>(), objs);
 

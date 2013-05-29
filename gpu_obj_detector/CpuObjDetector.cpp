@@ -33,7 +33,7 @@ CpuObjDetector::~CpuObjDetector() {
 	delete [] ii2;
 }
 
-void CpuObjDetector::Detect(int *g_img, vector<SubWindow>& objs) {
+void CpuObjDetector::Detect(int *g_img, vector<Rectangle>& objs) {
 	memcpy(grayscaled_bytes, g_img, pic_width * pic_height * sizeof(int));
 
 	ComputeIntegralImages();
@@ -64,7 +64,7 @@ void CpuObjDetector::Detect(int *g_img, vector<SubWindow>& objs) {
 					continue;
 
 				if (StagesPass(x, y, scale, inv, std_dev)) {
-					objs.push_back(SubWindow(x, y, width, height, scale));
+					objs.push_back(Rectangle(x, y, width, height));
 				}
 			}
 		}
@@ -97,7 +97,7 @@ bool CpuObjDetector::StagesPass(int x, int y, double scale, double inv, double s
 	        double rects_sum = 0;//RectsPass(tree, x, y, scale) * inv;
 
 	        for (int k = 0; k < HAAR_MAX_RECTS; k++) {
-				Rectangle &rect = tree.feature.rects[k];
+				WeightedRectangle &rect = tree.feature.rects[k];
 				if (rect.wg == 0) break;
 
 				rects_sum = rects_sum + RectSum(ii, x + (int)(rect.x * scale),

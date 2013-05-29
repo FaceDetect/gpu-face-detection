@@ -9,12 +9,11 @@
 #define OBJDETECTOR_H_
 
 #include "HaarCascade.h"
-#include "SubWindow.h"
 #include <vector>
 
 class ObjDetector {
 public:
-	virtual void Detect(int *g_img, std::vector<SubWindow>& objs) = 0;
+	virtual void Detect(int *g_img, std::vector<Rectangle>& objs) = 0;
 	virtual ~ObjDetector() { };
 };
 

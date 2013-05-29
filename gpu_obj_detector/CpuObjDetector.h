@@ -15,7 +15,7 @@ class CpuObjDetector : public ObjDetector {
 public:
 	CpuObjDetector(int w, int h, HaarCascade& cascade);
 	virtual ~CpuObjDetector();
-	virtual void Detect(int *g_img, std::vector<SubWindow>&  objs);
+	virtual void Detect(int *g_img, std::vector<Rectangle>&  objs);
 private:
 
 	void ComputeIntegralImages();

@@ -14,7 +14,7 @@
 using namespace std;
 using namespace rapidxml;
 
-void PrecalcSubwindows(int img_width, int img_height, int start_width, int start_height, vector<SubWindow>& subwindows) {
+void PrecalcSubwindows(int img_width, int img_height, int start_width, int start_height, vector<ScaledRectangle>& subwindows) {
 
 	float scale = 1.0;
 
@@ -28,7 +28,7 @@ void PrecalcSubwindows(int img_width, int img_height, int start_width, int start
 
 		for (int y = 0; y < img_height - height; y += y_step) {
 			for (int x = 0; x < img_width - width; x += x_step) {
-				subwindows.push_back(SubWindow(x, y, width, height, scale));
+				subwindows.push_back(ScaledRectangle(x, y, width, height, scale));
 			}
 		}
 
@@ -79,12 +79,12 @@ std::vector<std::string> Split(const std::string &s, char delim)
     return Split(s, delim, elems);
 }
 
-void LoadRects(rapidxml::xml_node<> *rect, Rectangle *rects) {
+void LoadRects(rapidxml::xml_node<> *rect, WeightedRectangle *rects) {
 
 	int i = 0;
 
 	do {
-		Rectangle r;
+		WeightedRectangle r;
 		vector<string> tokens = Split(rect->value(), ' ');
 
 		r.x = atoi(tokens.at(0).c_str());

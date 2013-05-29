@@ -13,7 +13,7 @@
 #define HAAR_MAX_RECTS 3
 
 struct Feature {
-	Rectangle rects[HAAR_MAX_RECTS];
+	WeightedRectangle rects[HAAR_MAX_RECTS];
 //	float tilted;
 };
 
