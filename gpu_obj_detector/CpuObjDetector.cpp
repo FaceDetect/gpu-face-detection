@@ -33,7 +33,7 @@ CpuObjDetector::~CpuObjDetector() {
 	delete [] ii2;
 }
 
-void CpuObjDetector::Detect(int *g_img, vector<Rectangle>& objs) {
+void CpuObjDetector::Detect(const int *g_img, vector<Rectangle>& objs) {
 	memcpy(grayscaled_bytes, g_img, pic_width * pic_height * sizeof(int));
 
 	ComputeIntegralImages();

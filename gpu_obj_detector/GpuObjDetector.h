@@ -15,14 +15,15 @@
 class GpuObjDetector : public ObjDetector {
 public:
 	GpuObjDetector(int w, int h, HaarCascade& cascade);
-	virtual void Detect(int *g_img, std::vector<Rectangle>& objs);
+	virtual void Detect(const int *g_img, std::vector<Rectangle>& objs);
 	virtual ~GpuObjDetector();
 private:
 
-	void DetectAtSubwindows(std::vector<ScaledRectangle> subwindows, std::vector<Rectangle>& objs);
+	void DetectAtSubwindows(std::vector<Rectangle>& objs);
 	void GpuComputeII();
 	void PrecalcInvAndStdDev(int num);
 	void CompactArrays(int& num_subwindows);
+	void PrecalcSubwindows();
 
 
 	int *dev_img;

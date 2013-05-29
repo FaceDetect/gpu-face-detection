@@ -39,7 +39,6 @@ std::vector<std::string> &Split(const std::string &s, char delim, std::vector<st
 std::vector<std::string> Split(const std::string &s, char delim);
 void ReadWholeFile(const char *path, char **out_content);
 void ComputeIIs(const int *input, int *ii, int *ii2, int img_width, int img_height);
-void PrecalcSubwindows(int img_width, int img_height, int start_width, int start_height, std::vector<ScaledRectangle>& subwindows);
 
 void LoadCascade(const char *path, HaarCascade& haar_cascade);
 

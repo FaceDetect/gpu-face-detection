@@ -13,7 +13,7 @@
 
 int main(int argv, char **args)
 {
-	ImgMedia media("../../data/judybats.jpg");
+	ImgMedia media("../../data/lena.jpg");
 //	WebCamMedia media(640, 480);
 
 	Application app(media, "../../data/haarcascade_frontalface_alt.xml");

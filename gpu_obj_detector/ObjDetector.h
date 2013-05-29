@@ -13,7 +13,7 @@
 
 class ObjDetector {
 public:
-	virtual void Detect(int *g_img, std::vector<Rectangle>& objs) = 0;
+	virtual void Detect(const int *g_img, std::vector<Rectangle>& objs) = 0;
 	virtual ~ObjDetector() { };
 };
 
