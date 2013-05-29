@@ -9,10 +9,11 @@
 #include "ImgMedia.h"
 #include "WebCamMedia.h"
 
+#include <cuda.h>
 
 int main(int argv, char **args)
 {
-	ImgMedia media("../../data/judybats.jpg");
+	ImgMedia media("../../data/jb.jpg");
 //	WebCamMedia media(640, 480);
 
 	Application app(media, "../../data/haarcascade_frontalface_alt.xml");

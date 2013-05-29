@@ -9,12 +9,16 @@
 #include "gpu_utils.h"
 #include "utils.h"
 
+#include <thrust/scan.h>
+
 #include <iostream>
 #include <algorithm>
 
 #define MAX_THREAD 416
 
 using namespace std;
+using namespace thrust;
+
 
 
 __constant__ __align__(4) char stage_buf[sizeof(Stage)];
@@ -147,9 +151,16 @@ __global__ void kernel_compact_arrays(const SubWindow *subwindows_in,
 
 
 void GpuObjDetector::CompactArrays(int& num_subwindows) {
-	CUDPPHandle scan_plan;
-	cudppPlan(lib, &scan_plan, scan_conf, num_subwindows, 1, 0);
-	cudppScan(scan_plan, dev_indexes, dev_is_valid, num_subwindows);
+//	CUDPPHandle scan_plan;
+//	cudppPlan(lib, &scan_plan, scan_conf, num_subwindows, 1, 0);
+//	cudppScan(scan_plan, dev_indexes, dev_is_valid, num_subwindows);
+
+	device_ptr<int> t_dev_is_valid = device_pointer_cast(dev_is_valid);
+	device_ptr<int> t_dev_indexes = device_pointer_cast(dev_indexes);
+
+
+	inclusive_scan(t_dev_is_valid, t_dev_is_valid + num_subwindows, t_dev_indexes);
+
 
 	kernel_compact_arrays<<<GetNumBlocks(num_subwindows), MAX_THREAD>>>(dev_subwindows_in,
 																		dev_subwindows_out,
@@ -167,11 +178,10 @@ void GpuObjDetector::CompactArrays(int& num_subwindows) {
 	swap(dev_inv_in, dev_inv_out);
 	swap(dev_std_dev_in, dev_std_dev_out);
 
-	cudppDestroyPlan(scan_plan);
+//	cudppDestroyPlan(scan_plan);
 }
 
-__global__ void kernel_detect_objs(int num_stage,
-								   const int *ii,
+__global__ void kernel_detect_objs(const int *ii,
 								   const int *ii2,
 								   const float *invs,
 								   const float *std_devs,
@@ -230,9 +240,11 @@ void GpuObjDetector::DetectAtSubwindows(vector<SubWindow>& subwindows) {
 
 	for (int i = 0; i < HAAR_MAX_STAGES; i++) {
 
+		if (num_subwindows == 0) break;
+
 		HANDLE_ERROR(cudaMemcpyToSymbol(stage_buf, &haar_cascade.stages[i], sizeof(Stage)));
 
-		kernel_detect_objs<<<GetNumBlocks(num_subwindows), MAX_THREAD>>>(i,
+		kernel_detect_objs<<<GetNumBlocks(num_subwindows), MAX_THREAD>>>(
 											dev_ii,
 											dev_ii2,
 											dev_inv_in,
@@ -280,11 +292,11 @@ GpuObjDetector::GpuObjDetector(int w, int h, HaarCascade& cascade) :
 	HANDLE_ERROR(cudaMalloc(&dev_std_dev_out, sizeof(float) * all_subwindows.size()));
 
 
-	cudppCreate(&lib);
-	scan_conf.op = CUDPP_ADD;
-	scan_conf.datatype = CUDPP_INT;
-	scan_conf.algorithm = CUDPP_SCAN;
-	scan_conf.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE;
+//	cudppCreate(&lib);
+//	scan_conf.op = CUDPP_ADD;
+//	scan_conf.datatype = CUDPP_INT;
+//	scan_conf.algorithm = CUDPP_SCAN;
+//	scan_conf.options = CUDPP_OPTION_FORWARD | CUDPP_OPTION_INCLUSIVE;
 
 }
 
@@ -312,6 +324,6 @@ GpuObjDetector::~GpuObjDetector() {
 	HANDLE_ERROR(cudaFree(dev_std_dev_in));
 	HANDLE_ERROR(cudaFree(dev_std_dev_out));
 
-	cudppDestroy(lib);
+//	cudppDestroy(lib);
 
 }

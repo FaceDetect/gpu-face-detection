@@ -8,10 +8,14 @@
 #ifndef GPU_UTILS_H_
 #define GPU_UTILS_H_
 
-#define MATR_VAL(arr, r, c, w) \
-	(( arr ) [ ( r ) * ( w ) + c ])
+#include <cstdio>
 
-void HandleError(cudaError_t err, const char *file, int line);
+static void HandleError(cudaError_t err, const char *file, int line ) {
+    if (err != cudaSuccess) {
+        fprintf(stderr, "%s in %s at line %d\n", cudaGetErrorString(err), file, line);
+        exit(EXIT_FAILURE);
+    }
+}
 
 #define HANDLE_ERROR( err ) (HandleError( err, __FILE__, __LINE__ ))
 

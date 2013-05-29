@@ -12,7 +12,6 @@
 #include "SubWindow.h"
 
 #include <vector>
-#include <cudpp.h>
 
 class GpuObjDetector : public ObjDetector {
 public:
@@ -48,8 +47,8 @@ private:
 	int img_height;
 	HaarCascade haar_cascade;
 
-	CUDPPHandle lib;
-	CUDPPConfiguration scan_conf;
+//	CUDPPHandle lib;
+//	CUDPPConfiguration scan_conf;
 
 	int img_mem_size;
 	int ii_mem_size;

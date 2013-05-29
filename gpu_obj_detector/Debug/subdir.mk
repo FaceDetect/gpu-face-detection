@@ -12,12 +12,10 @@ CPP_SRCS += \
 ../utils.cpp 
 
 CU_SRCS += \
-../GpuObjDetector.cu \
-../gpu_utils.cu 
+../GpuObjDetector.cu 
 
 CU_DEPS += \
-./GpuObjDetector.d \
-./gpu_utils.d 
+./GpuObjDetector.d 
 
 OBJS += \
 ./Application.o \
@@ -25,7 +23,6 @@ OBJS += \
 ./GpuObjDetector.o \
 ./ImgMedia.o \
 ./WebCamMedia.o \
-./gpu_utils.o \
 ./main.o \
 ./utils.o 
 
