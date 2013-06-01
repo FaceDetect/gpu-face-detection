@@ -19,8 +19,8 @@ void ReadWholeFile(const char *path, char **out_content) {
 	long file_size;
 
 	if ((f = fopen(path, "rt")) == NULL) {
-		printf("NO file\n");
-		return;
+		cout << "File " << path << " not found.";
+		exit(-1);
 	}
 
 	fseek(f, 0, SEEK_END);

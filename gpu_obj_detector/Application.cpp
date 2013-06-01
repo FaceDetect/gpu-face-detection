@@ -49,6 +49,7 @@ void Application::Run() {
 
 		float elapsed = tm.getTimeMilli();
 
+		cout << "Elapsed: " << elapsed << endl;
 		cout << "FPS: " << 1000 / elapsed << endl;
 
 
