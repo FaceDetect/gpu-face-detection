@@ -16,44 +16,57 @@ CascadeTrainer::CascadeTrainer(DataSet& training_set, DataSet& test_set) :
 	test_set(test_set){
 }
 
-void CascadeTrainer::Train(float f, float d, float f_target) {
+void CascadeTrainer::Train(vector<int> num_weaks) {
 
-	float F[1000];
-	float D[1000];
+	for (int i = 0; i < num_weaks.size(); i++) {
+		AdaBoost *ab = new AdaBoost(training_set);
 
-	F[0] = 1.0;
-	D[0] = 1.0;
+		for (int j = 0; j < num_weaks[i]; j++)
+			ab->TrainWeak();
 
-	int i = 0;
-
-	while (F[i] > f_target) {
-		i++;
-		F[i] = F[i - 1];
-
-		int n = 0;
-
-		AdaBoost *stage = new AdaBoost(training_set);
-		stages.push_back(stage);
-
-		while (F[i] > f * F[i - 1]) {
-			n++;
-
-			stage->Clear();
-
-			for (int i = 0; i < n; i++)
-				stage->TrainWeak();
-
-			Mat_<label_t> labels;
-			Classify(test_set.data, labels);
-
-			// Discrease threshold
-
-		}
-
-		if (F[i] > f_target) {
-			// Adjust negative set
-		}
+		stages.push_back(ab);
 	}
+
+
+
+
+
+//	float F[1000];
+//	float D[1000];
+//
+//	F[0] = 1.0;
+//	D[0] = 1.0;
+//
+//	int i = 0;
+//
+//	while (F[i] > f_target) {
+//		i++;
+//		F[i] = F[i - 1];
+//
+//		int n = 0;
+//
+//		AdaBoost *stage = new AdaBoost(training_set);
+//		stages.push_back(stage);
+//
+//		while (F[i] > f * F[i - 1]) {
+//			n++;
+//
+//			stage->Clear();
+//
+//			for (int i = 0; i < n; i++)
+//				stage->TrainWeak();
+//
+//			Mat_<label_t> labels;
+//			Classify(test_set.data, labels);
+//
+//			// Discrease threshold
+//
+//		}
+//
+//		if (F[i] > f_target) {
+//			// Adjust negative set
+//		}
+//	}
 }
 
 void CascadeTrainer::Classify(const Data& data, cv::Mat_<label_t>& labels) {
@@ -71,5 +84,11 @@ void CascadeTrainer::Classify(const Data& data, cv::Mat_<label_t>& labels) {
 				break;
 			}
 		}
+	}
+}
+
+CascadeTrainer::~CascadeTrainer() {
+	for (int i = 0; i < stages.size(); i++) {
+		delete stages[i];
 	}
 }

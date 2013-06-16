@@ -16,7 +16,7 @@ using namespace std;
 Feature::Feature() {
 }
 
-Feature::Feature(int offset, Rectangle r1, Rectangle r2, Rectangle r3) {
+Feature::Feature(int offset, WeightedRectangle r1, WeightedRectangle r2, WeightedRectangle r3) {
 	InitFeature(offset, r1, r2, r3);
 }
 
@@ -25,9 +25,9 @@ Feature::Feature(int offset,
 				 int x1, int y1, int w1, int h1, int wg1,
 				 int x2, int y2, int w2, int h2, int wg2) {
 
-	InitFeature(offset, Rectangle(x0, y0, w0, h0, wg0),
-						Rectangle(x1, y1, w1, h1, wg1),
-						Rectangle(x2, y2, w2, h2, wg2));
+	InitFeature(offset, WeightedRectangle(x0, y0, w0, h0, wg0),
+						WeightedRectangle(x1, y1, w1, h1, wg1),
+						WeightedRectangle(x2, y2, w2, h2, wg2));
 
 }
 
@@ -59,8 +59,8 @@ void Feature::PrintInfo() {
 
 }
 
-void Feature::InitFeature(int offset, Rectangle r1, Rectangle r2,
-		Rectangle r3) {
+void Feature::InitFeature(int offset, WeightedRectangle r1, WeightedRectangle r2,
+		WeightedRectangle r3) {
 
 	rects[0] = r1;
 	rects[1] = r2;

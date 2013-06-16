@@ -105,8 +105,11 @@ void AdaBoost::TrainWeak() {
 
 	float beta = stump.wg_err / (1 - stump.wg_err);
 
+	Mat_<label_t> stump_labels;
+	stump.Classify(data_set.data, stump_labels);
+
 	for (int i = 0; i < W.rows; i++)
-		W(i, 0) *= pow(beta, 1 - stump.err_arr(i, 0));
+		W(i, 0) *= pow(beta, 1 - (stump_labels(i, 0) != data_set.labels(i, 0)));
 
 	float alpha = log(1 / beta);
 

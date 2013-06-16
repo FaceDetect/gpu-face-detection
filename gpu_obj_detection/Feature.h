@@ -18,7 +18,7 @@
 class Feature {
 public:
 	Feature();
-	Feature(int offset, Rectangle r1, Rectangle r2, Rectangle r3 = Rectangle());
+	Feature(int offset, WeightedRectangle r1, WeightedRectangle r2, WeightedRectangle r3 = WeightedRectangle());
 	Feature(int offset,
 			int x0, int y0, int w0, int h0, int wg0,
 			int x1, int y1, int w1, int h1, int wg1,
@@ -29,14 +29,14 @@ public:
 	void PrintInfo();
 //	void write( FileStorage &fs ) const;
 
-	Rectangle rects[HAAR_MAX_RECTS];
+	WeightedRectangle rects[HAAR_MAX_RECTS];
 
 	struct {
 		int p0, p1, p2, p3;
 	} rects_coords[HAAR_MAX_RECTS];
 
 private:
-	void InitFeature(int offset, Rectangle r1, Rectangle r2, Rectangle r3);
+	void InitFeature(int offset, WeightedRectangle r1, WeightedRectangle r2, WeightedRectangle r3);
 
 };
 

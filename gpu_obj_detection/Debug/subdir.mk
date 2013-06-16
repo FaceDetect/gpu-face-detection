@@ -12,10 +12,12 @@ CPP_SRCS += \
 ../utils.cpp 
 
 CU_SRCS += \
+../GpuDecisionStump.cu \
 ../gpu_prepare_data_set.cu \
 ../gpu_utils.cu 
 
 CU_DEPS += \
+./GpuDecisionStump.d \
 ./gpu_prepare_data_set.d \
 ./gpu_utils.d 
 
@@ -25,6 +27,7 @@ OBJS += \
 ./DataSet.o \
 ./DecisionStump.o \
 ./Feature.o \
+./GpuDecisionStump.o \
 ./gpu_prepare_data_set.o \
 ./gpu_utils.o \
 ./utils.o 

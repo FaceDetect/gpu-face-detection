@@ -8,16 +8,16 @@
 #ifndef RECTANGLE_H_
 #define RECTANGLE_H_
 
-struct Rectangle {
+struct WeightedRectangle {
 
-	Rectangle() :
+	WeightedRectangle() :
 		x(0),
 		y(0),
 		w(0),
 		h(0),
 		wg(0) {	}
 
-	Rectangle(int x, int y,	int w, int h, int wg) :
+	WeightedRectangle(int x, int y,	int w, int h, int wg) :
 		x(x),
 		y(y),
 		w(w),

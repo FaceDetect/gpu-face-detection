@@ -6,10 +6,12 @@
  */
 
 #include <climits>
+#include <iostream>
 
 #include "DecisionStump.h"
 
 using namespace cv;
+using namespace std;
 
 
 DecisionStump::DecisionStump() :
@@ -39,6 +41,8 @@ void DecisionStump::Train(const DataSet& data_set, const cv::Mat_<float> W) {
 	for (int col = 0; col < data_set.data.cols; col++) {
 
 		Mat_<float> feature_vals = data_set.data.col(col);
+
+		cout << col << "/" << data_set.data.cols << " column processed" << "\r";
 
 		for (MatIterator_<float> it = feature_vals.begin(); it != feature_vals.end(); it++) {
 			float &thr = *it;

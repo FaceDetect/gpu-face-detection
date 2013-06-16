@@ -10,12 +10,15 @@
 
 #include "AdaBoost.h"
 
+#include <vector>
+
 class CascadeTrainer {
 public:
 	CascadeTrainer(DataSet& training_set, DataSet& test_set);
-	void Train(float f, float d, float f_target);
+	void Train(std::vector<int> num_weaks);
 
 	void Classify(const Data& data, cv::Mat_<label_t>& labels);
+	~CascadeTrainer();
 private:
 	DataSet &training_set;
 	DataSet &test_set;

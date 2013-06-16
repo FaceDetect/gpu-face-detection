@@ -26,9 +26,10 @@ public:
 	float threshold;
 	int i_feature;
 	bool gt;
+	float wg_err;
+
 
 private:
-	float wg_err;
 	cv::Mat_<float> err_arr;
 };
 

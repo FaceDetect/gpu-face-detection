@@ -8,9 +8,6 @@
 #include "gpu_prepare_data_set.h"
 #include "gpu_utils.h"
 
-#define IMG_SIZE ( W_WIDTH * W_HEIGHT )
-#define II_SIZE ( ( W_WIDTH + 1 ) * ( W_HEIGHT + 1 ) )
-
 #define MAX_THREADS_TO_PROCESS_DATA_SET 512
 
 using namespace std;
@@ -114,10 +111,10 @@ void eval_all_features(Feature *dev_features, float *dev_results, int num_imgs, 
 
 	int num_blocks = ceilf((float) num_features / MAX_THREADS_TO_PROCESS_DATA_SET);
 
-	for (int i = 0; i < num_imgs; i++) {
+	float *dev_feature_vals;
+	HANDLE_ERROR(cudaMalloc(&dev_feature_vals, sizeof(float) * num_features));
 
-		float *dev_feature_vals;
-		HANDLE_ERROR(cudaMalloc(&dev_feature_vals, sizeof(float) * num_features));
+	for (int i = 0; i < num_imgs; i++) {
 
 		kernel_eval_features<<<num_blocks, MAX_THREADS_TO_PROCESS_DATA_SET>>>(dev_feature_vals,
 																			  dev_results,
@@ -126,29 +123,28 @@ void eval_all_features(Feature *dev_features, float *dev_results, int num_imgs, 
 																			  num_features);
 
 		HANDLE_ERROR(cudaMemcpy(data.ptr<float>(i), dev_feature_vals, sizeof(float) * num_features, cudaMemcpyDeviceToHost));
-
-		HANDLE_ERROR(cudaFree(dev_feature_vals));
 	}
+
+	HANDLE_ERROR(cudaFree(dev_feature_vals));
+
 }
 
 
 
-void imgs_vector_to_pointer(const std::vector<LabeledImg>& imgs, float *p_imgs) {
-
-//	int img_size = W_WIDTH * W_HEIGHT;
+void imgs_vector_to_pointer(const std::vector<LabeledImg>& imgs, float *p_imgs, cv::Mat_<label_t>& labels) {
 
 	for (int i = 0; i < imgs.size(); i++) {
 		const float *data = imgs[i].first.ptr<float>(0);
 		memcpy(p_imgs + IMG_SIZE * i, data, sizeof(float) * IMG_SIZE);
+		labels(i, 0) = imgs[i].second;
 	}
 }
 
 void pointer_to_imgs_vector(std::vector<LabeledImg>& imgs, float *results) {
 
-//	int ii_size = (W_WIDTH + 1) * (W_HEIGHT + 1);
-
 	for (int i = 0; i < imgs.size(); i++) {
 		imgs[i].first = Mat_<float>(W_HEIGHT + 1, W_WIDTH + 1, results + II_SIZE * i);
+
 	}
 }
 
@@ -158,15 +154,11 @@ void gpu_prepare_data_set(std::vector<LabeledImg>& imgs,
 						  cv::Mat_<label_t>& labels,
 						  Data& data) {
 
-//	int img_size = W_WIDTH * W_HEIGHT;
-//	int ii_size = (W_WIDTH + 1) * (W_HEIGHT + 1);
-
 	int num_imgs = imgs.size();
 	int num_features = feature_set.size();
 
 	float *p_imgs = new float[IMG_SIZE * imgs.size()];
-//	float *results = new float[II_SIZE * imgs.size()];
-	imgs_vector_to_pointer(imgs, p_imgs);
+	imgs_vector_to_pointer(imgs, p_imgs, labels);
 
 	Feature *dev_feature_set;
 	float *dev_imgs;
@@ -181,6 +173,7 @@ void gpu_prepare_data_set(std::vector<LabeledImg>& imgs,
 	HANDLE_ERROR(cudaMalloc(&dev_results, sizeof(float) * II_SIZE * num_imgs));
 	HANDLE_ERROR(cudaMemset(dev_results, 0, sizeof(float) * II_SIZE * num_imgs));
 
+
 	int num_blocks = ceilf((float) num_imgs / MAX_THREADS_TO_PROCESS_DATA_SET);
 
 	kernel_calc_iis_and_normalize<<<num_blocks, MAX_THREADS_TO_PROCESS_DATA_SET>>>(dev_imgs,
@@ -189,19 +182,6 @@ void gpu_prepare_data_set(std::vector<LabeledImg>& imgs,
 
 
 	eval_all_features(dev_feature_set, dev_results, num_imgs, num_features, data);
-
-//	HANDLE_ERROR(cudaMemcpy(results, dev_results, sizeof(float) * II_SIZE * num_imgs, cudaMemcpyDeviceToHost));
-
-
-//	for (int y = 0; y < W_HEIGHT + 1; y++) {
-//		for (int x = 0; x < W_WIDTH + 1; x++) {
-//			cout << iival(results, y, x) << "\t";
-//		}
-//		cout << endl;
-//	}
-
-//	pointer_to_imgs_vector(imgs, results);
-
 
 	HANDLE_ERROR(cudaFree(dev_feature_set));
 	HANDLE_ERROR(cudaFree(dev_imgs));
