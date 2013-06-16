@@ -6,10 +6,19 @@
  */
 
 #include <opencv2/opencv.hpp>
+#include <opencv2/contrib/contrib.hpp>
+
 #include <iostream>
-#include <time.h>
+#include <vector>
+#include <cstdlib>
+#include <ctime>
+
 #include "DataSet.h"
+
 #include "utils.h"
+#include "DecisionStump.h"
+#include "GpuDecisionStump.h"
+#include "CascadeTrainer.h"
 //#include "Feature.h"
 //#include <algorithm>
 //#include "DecisionStump.h"
@@ -18,13 +27,27 @@
 using namespace cv;
 using namespace std;
 
+static void Help() {
+	cout << "Usage: ./cascade_trainer <pos_list> <neg_list> <test_pos> <test_neg> <num_weaks*>" << endl;
+}
+
 int main( int argc, char **argv ) {
 
-	const clock_t begin_time = clock();
+	if (argc < 6) {
+		Help();
+		return -1;
+	}
 
-	DataSet("one_pos.txt", "one_pos.txt");
 
-	std::cout << endl << "Time elapsed: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
+	DataSet data_set(argv[1], argv[2]);
+	DataSet test_set(argv[1], argv[2]);
 
-    return 0;
+	vector<int> num_weaks;
+
+	for (int i = 5; i < argc; i++) {
+		num_weaks.push_back(atoi(argv[i]));
+	}
+
+	CascadeTrainer trainer(data_set, test_set);
+	trainer.Train(num_weaks);
 }
